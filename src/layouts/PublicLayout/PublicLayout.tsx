@@ -16,10 +16,17 @@ const SOCIALS = [
   { label: 'LinkedIn', value: 'in' },
 ]
 
-const navItems = [
+type NavItem =
+  | { label: string; to: string; scrollTo?: never }
+  | { label: string; to?: never; scrollTo: string }
+
+const navItems: NavItem[] = [
   { label: 'Home', to: '/' },
   { label: 'Products', to: '/products' },
   { label: 'Contact', to: '/contact' },
+  { label: 'Categories', scrollTo: 'categories' },
+  { label: 'About Us', scrollTo: 'about-us' },
+  { label: 'Services', scrollTo: 'services' },
 ]
 
 function HeaderLogo() {
@@ -51,8 +58,29 @@ function HeaderLogo() {
   )
 }
 
+function scrollToSection(sectionId: string) {
+  const el = document.getElementById(sectionId)
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+}
+
 export default function PublicLayout() {
   const location = useLocation()
+  const navigate = useNavigate()
+
+  const handleNavClick = (item: NavItem) => {
+    if ('to' in item) {
+      window.location.href = item.to
+    } else if ('scrollTo' in item) {
+      if (location.pathname === '/') {
+        scrollToSection(item.scrollTo)
+      } else {
+        navigate('/')
+        setTimeout(() => scrollToSection(item.scrollTo), 300)
+      }
+    }
+  }
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -112,13 +140,16 @@ export default function PublicLayout() {
 
             <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1.5 }}>
               {navItems.map((item) => {
-                const active = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to)
+                const key = 'to' in item ? item.to : item.scrollTo
+                const isActive = 'to' in item
+                  ? (item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to))
+                  : false
                 return (
                   <Button
-                    key={item.to}
-                    onClick={() => (window.location.href = item.to)}
+                    key={key}
+                    onClick={() => handleNavClick(item)}
                     sx={{
-                      color: active ? 'primary.main' : 'secondary.main',
+                      color: isActive ? 'primary.main' : 'secondary.main',
                       fontWeight: 800,
                       '&:hover': { backgroundColor: 'transparent', color: 'primary.main' },
                     }}

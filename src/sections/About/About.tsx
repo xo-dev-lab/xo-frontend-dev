@@ -7,7 +7,7 @@ export default function About() {
   const theme = useTheme()
 
   return (
-<Box sx={{ py: { xs: 4, md: 6 }, px: { xs: 3, md: 10 } }}>
+<Box id="about-us" sx={{ py: { xs: 4, md: 6 }, px: { xs: 3, md: 10 } }}>
       <Box
         sx={{
           display: 'grid',

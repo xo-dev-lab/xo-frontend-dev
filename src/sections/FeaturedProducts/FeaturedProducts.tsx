@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -90,6 +91,8 @@ const products = [
 ]
 
 export default function FeaturedProducts() {
+  const navigate = useNavigate()
+
   return (
     <Box sx={{ py: { xs: 4, md: 6 }, px: { xs: 3, md: 10 } }}>
       <SectionTitle title='Featured Products' align='center' />
@@ -107,8 +110,10 @@ export default function FeaturedProducts() {
         {products.map((product) => (
           <Card
             key={product.id}
+            onClick={() => navigate(`/products/${product.id}`)}
             sx={{
               pt: 2,
+              cursor: 'pointer',
               transition: 'box-shadow 0.3s ease, transform 0.3s ease',
               '&:hover': {
                 boxShadow: '0 8px 24px rgba(15, 23, 42, 0.16)',

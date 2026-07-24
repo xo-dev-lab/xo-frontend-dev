@@ -1,21 +1,28 @@
+import { useNavigate } from 'react-router-dom'
 import Box from '@mui/material/Box'
 
 import SectionTitle from '@/components/common/ui/SectionTitle/SectionTitle'
 
 export default function Categories() {
+  const navigate = useNavigate()
+
   const categories = [
-    { title: 'Solar Panels', description: 'Power & efficiency', to: '/products' },
-    { title: 'Inverters', description: 'Reliable performance', to: '/products' },
-    { title: 'Batteries', description: 'Backup & storage', to: '/products' },
-    { title: 'Accessories', description: 'Complete the system', to: '/products' },
-    { title: 'Charge Controllers', description: 'Optimize charging', to: '/products' },
-    { title: 'Mounting Structures', description: 'Secure installation', to: '/products' },
-    { title: 'Cables & Wiring', description: 'Reliable connectivity', to: '/products' },
-    { title: 'Monitoring Systems', description: 'Track performance', to: '/products' },
+    { title: 'Solar Panels', description: 'Power & efficiency' },
+    { title: 'Inverters', description: 'Reliable performance' },
+    { title: 'Batteries', description: 'Backup & storage' },
+    { title: 'Accessories', description: 'Complete the system' },
+    { title: 'Charge Controllers', description: 'Optimize charging' },
+    { title: 'Mounting Structures', description: 'Secure installation' },
+    { title: 'Cables & Wiring', description: 'Reliable connectivity' },
+    { title: 'Hardware', description: 'Hardware solutions' },
   ]
 
+  const handleCategoryClick = (title: string) => {
+    navigate(`/products?category=${encodeURIComponent(title)}`)
+  }
+
   return (
-    <Box sx={{ py: 2 }}>
+    <Box id="categories" sx={{ py: 2 }}>
       <SectionTitle title='Explore our products categories' align='center' />
 
       <Box
@@ -28,13 +35,13 @@ export default function Categories() {
         {categories.map((cat) => (
           <Box
             key={cat.title}
-            component='a'
-            href={cat.to}
+            onClick={() => handleCategoryClick(cat.title)}
             sx={{
               textDecoration: 'none',
               borderRadius: 2,
               textAlign: 'center',
               padding: { xs: 1, md: 1.5 },
+              cursor: 'pointer',
             }}
           >
             <Box

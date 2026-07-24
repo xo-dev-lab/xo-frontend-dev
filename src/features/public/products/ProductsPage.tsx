@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -21,7 +21,9 @@ const brands = [...new Set(products.map((p) => p.brand))]
 
 export default function ProductsPage() {
   const navigate = useNavigate()
-  const [selectedCategory, setSelectedCategory] = useState<string>('')
+  const [searchParams] = useSearchParams()
+  const initialCategory = searchParams.get('category') || ''
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory)
   const [selectedBrand, setSelectedBrand] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState<string>('')
 

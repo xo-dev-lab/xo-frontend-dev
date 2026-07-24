@@ -68,7 +68,7 @@ const products = [
 
 export default function Services() {
   return (
-    <Box sx={{ py: { xs: 4, md: 6 }, px: { xs: 3, md: 10 } }}>
+    <Box id="services" sx={{ py: { xs: 4, md: 6 }, px: { xs: 3, md: 10 } }}>
       <SectionTitle title='Our Services' eyebrow='We provide end-to-end security and automation solution.' align='center' />
       <Box
         sx={{
