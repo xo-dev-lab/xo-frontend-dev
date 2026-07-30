@@ -12,7 +12,6 @@ import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined'
 import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined'
 
 import PageContainer from '@/components/common/ui/PageContainer/PageContainer'
-import SectionTitle from '@/components/common/ui/SectionTitle/SectionTitle'
 import Button from '@/components/common/ui/Button/Button'
 
 /* ------------------------------------------------------------------ */

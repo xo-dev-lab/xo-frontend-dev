@@ -13,6 +13,7 @@ import InstagramIcon from '@mui/icons-material/Instagram'
 import LinkedInIcon from '@mui/icons-material/LinkedIn'
 
 import logoImg from '../../assets/logo.jpeg'
+import { any } from 'prop-types'
 
 const SOCIALS = [
   { label: 'Facebook', icon: <FacebookIcon sx={{ fontSize: 18 }} /> },
@@ -75,7 +76,7 @@ export default function PublicLayout() {
 
   const handleNavClick = (item: NavItem) => {
     if ('to' in item) {
-      window.location.href = item.to
+      window.location.href = item.to!
     } else if ('scrollTo' in item) {
       if (location.pathname === '/') {
         scrollToSection(item.scrollTo)
@@ -148,7 +149,7 @@ export default function PublicLayout() {
               {navItems.map((item) => {
                 const key = 'to' in item ? item.to : item.scrollTo
                 const isActive = 'to' in item
-                  ? (item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to))
+                  ? (item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to!))
                   : false
                 return (
                   <Button
