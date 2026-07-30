@@ -8,12 +8,16 @@ import Button from '@mui/material/Button'
 import type { Theme } from '@mui/material/styles'
 import Typography from '@mui/material/Typography'
 
+import FacebookIcon from '@mui/icons-material/Facebook'
+import InstagramIcon from '@mui/icons-material/Instagram'
+import LinkedInIcon from '@mui/icons-material/LinkedIn'
+
 import logoImg from '../../assets/logo.jpeg'
 
 const SOCIALS = [
-  { label: 'Facebook', value: 'f' },
-  { label: 'Twitter', value: 't' },
-  { label: 'LinkedIn', value: 'in' },
+  { label: 'Facebook', icon: <FacebookIcon sx={{ fontSize: 18 }} /> },
+  { label: 'Instagram', icon: <InstagramIcon sx={{ fontSize: 18 }} /> },
+  { label: 'LinkedIn', icon: <LinkedInIcon sx={{ fontSize: 18 }} /> },
 ]
 
 type NavItem =
@@ -94,14 +98,14 @@ export default function PublicLayout() {
       >
         <Container maxWidth={false} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant='body2' sx={{ fontWeight: 700 }}>
-            Email: info@xoenterprise.com
+            Email: info@xoenterprise.in
           </Typography>
 
           <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
             <Typography variant='body2' sx={{ fontWeight: 700 }}>
             Follow Us:
           </Typography>
-            {SOCIALS.map((s) => (
+{SOCIALS.map((s) => (
               <Box
                 key={s.label}
                 component='a'
@@ -114,9 +118,11 @@ export default function PublicLayout() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  color: '#CBD5E1',
+                  '&:hover': { color: '#E53935' },
                 }}
               >
-                {s.value}
+                {s.icon}
               </Box>
             ))}
           </Box>

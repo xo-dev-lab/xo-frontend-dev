@@ -9,12 +9,12 @@ import Divider from '@mui/material/Divider'
 import Stack from '@mui/material/Stack'
 
 const brands = [
-  "/brands/hikvision.svg",
-  "/brands/dahua.svg",
-  "/brands/bosch.svg",
-  "/brands/honeywell.svg",
-  "/brands/cpplus.svg",
-  "/brands/suprema.svg",
+  { name: "Hikvision", src: "https://placehold.co/200x80/0F172A/E53935?text=Hikvision" },
+  { name: "Dahua", src: "https://placehold.co/200x80/0F172A/E53935?text=Dahua" },
+  { name: "Bosch", src: "https://placehold.co/200x80/0F172A/E53935?text=Bosch" },
+  { name: "Honeywell", src: "https://placehold.co/200x80/0F172A/E53935?text=Honeywell" },
+  { name: "CP Plus", src: "https://placehold.co/200x80/0F172A/E53935?text=CP+Plus" },
+  { name: "Suprema", src: "https://placehold.co/200x80/0F172A/E53935?text=Suprema" },
 ];
 
 export default function HeroSection() {
@@ -261,13 +261,17 @@ export default function HeroSection() {
         >
           {brands.map((logo) => (
             <Box
-              key={logo}
+              key={logo.name}
               component="img"
-              src={logo}
-              alt="lol"
+              src={logo.src}
+              // alt={logo.name}
               sx={{
-                height: 45,
+                height: 65,
                 objectFit: "contain",
+                backgroundColor: "#fff",
+                borderRadius: 1,
+                px: 1,
+                py: 1,
               }}
             />
           ))}

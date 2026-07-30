@@ -381,7 +381,7 @@ export default function ProductDetailsPage() {
             <Tab label='Descriptions' />
             <Tab label='Specifications' />
             <Tab label='Applications' />
-            <Tab label='Downloads' />
+            {/* <Tab label='Downloads' /> */}
           </Tabs>
 
           {/* Tab content */}
@@ -438,7 +438,7 @@ export default function ProductDetailsPage() {
                 </Box>
               </Box>
             )}
-            {activeTab === 3 && (
+            {/* {activeTab === 3 && (
               <Box>
                 <Typography variant='h6' fontWeight={700} gutterBottom>
                   Downloads & Resources
@@ -457,7 +457,7 @@ export default function ProductDetailsPage() {
                   ))}
                 </Box>
               </Box>
-            )}
+            )} */}
           </Box>
         </Box>
       </Box>

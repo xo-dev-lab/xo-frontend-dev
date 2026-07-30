@@ -45,7 +45,7 @@ export default function About() {
           </Typography>
           {[
             'XO Enterprises Was established in 2017. I believe in saying that a friend is one who takes me for what I am.',
-            'Being Owner of XO Enterprises, I have first got the experience of 4 year in this field and gathered the technical as well as the theoretical knowledge. I realize the fact that no one can stand in market without sharing his/her interests with other.',
+            'Being Owner of XO Enterprises, I have first got the experience of 10 year in this field and gathered the technical as well as the theoretical knowledge. I realize the fact that no one can stand in market without sharing his/her interests with other.',
             `With support of all companies employees, XO enterprises is able to create a steady sales increase and growing number of clients are showing their trust/confidence rapidly. This is all due to everyone's diligent untiring contribution towards the company.`,
             'The progress of economy, thriving of the society, and the improvement of people&rsquo;s daily lives create the demand for security facility.',
           ].map((paragraph, index) => (
