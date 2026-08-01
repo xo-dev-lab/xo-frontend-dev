@@ -75,7 +75,7 @@ export default function PublicLayout() {
 
   const handleNavClick = (item: NavItem) => {
     if ('to' in item) {
-      window.location.href = item.to!
+      navigate(item.to!)
     } else if ('scrollTo' in item) {
       if (location.pathname === '/') {
         scrollToSection(item.scrollTo)
@@ -171,7 +171,7 @@ export default function PublicLayout() {
                 variant='contained'
                 color='primary'
                 sx={{ borderRadius: 1, px: 3, py: 1.25, display: { xs: 'none', sm: 'inline-flex' } }}
-                onClick={() => (window.location.href = '/contact')}
+                onClick={() => navigate('/contact')}
               >
                 Request Quote
               </Button>

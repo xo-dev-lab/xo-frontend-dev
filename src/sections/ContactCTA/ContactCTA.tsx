@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom'
+
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 
@@ -12,6 +14,8 @@ const features = [
 ]
 
 export default function ContactCTA() {
+  const navigate = useNavigate()
+
   return (
     <Box
       sx={{
@@ -85,7 +89,7 @@ export default function ContactCTA() {
             variant='contained'
             color='primary'
             size='large'
-            onClick={() => (window.location.href = '/contact')}
+            onClick={() => navigate('/contact')}
             sx={{
               mt: 4,
               px: { xs: 4, md: 5 },

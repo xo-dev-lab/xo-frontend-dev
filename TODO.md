@@ -1,12 +1,14 @@
-# TODO
+# TODO - Fix Vercel SPA 404 on /contact
 
-## Phase 1: Match reference UI (desktop + mobile)
-- [x] Add the black top info bar (email + social icons) above the main header in `src/layouts/PublicLayout/PublicLayout.tsx`.
-- [x] Update hero markup/styling in `src/sections/Hero/HeroSection.tsx` to match the reference layout/spacing.
-- [x] Implement Products categories section UI in `src/sections/Categories/Categories.tsx` (cards/grid + responsive behavior).
+## Steps
 
-
-## Phase 2: Validate
-- [ ] Run `npm run build` (or `npm run dev`) and fix any TS/MUI/layout issues.
-- [ ] Manual check of desktop + mobile rendering.
+- [x] Create `vercel.json` with SPA rewrite rule (`/(.*)` -> `/index.html`)
+- [x] `src/layouts/PublicLayout/PublicLayout.tsx`:
+  - Replace `window.location.href = item.to!` with `navigate(item.to!)` in `handleNavClick`
+  - Replace Request Quote `window.location.href = '/contact'` with `navigate('/contact')`
+- [x] `src/sections/ContactCTA/ContactCTA.tsx`:
+  - Import `useNavigate`, add hook
+  - Replace `window.location.href = '/contact'` with `navigate('/contact')`
+- [ ] Run `npm run build` to verify TypeScript + Vite build passes (in progress)
+- [ ] Commit changes (git add/commit/push) to trigger Vercel redeploy
 
