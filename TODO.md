@@ -9,6 +9,6 @@
 - [x] `src/sections/ContactCTA/ContactCTA.tsx`:
   - Import `useNavigate`, add hook
   - Replace `window.location.href = '/contact'` with `navigate('/contact')`
-- [ ] Run `npm run build` to verify TypeScript + Vite build passes (in progress)
-- [ ] Commit changes (git add/commit/push) to trigger Vercel redeploy
+- [x] Run `npm run build` to verify TypeScript + Vite build passes
+- [x] Commit changes (git add/commit/push) to trigger Vercel redeploy
 
