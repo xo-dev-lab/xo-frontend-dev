@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import {
   Box,
@@ -5,6 +6,7 @@ import {
   TextField,
   Grid,
   Stack,
+  CircularProgress,
 } from '@mui/material'
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined'
 import CallOutlinedIcon from '@mui/icons-material/CallOutlined'
@@ -70,13 +72,48 @@ export default function ContactPage() {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<ContactFormData>()
 
-  const onSubmit = (data: ContactFormData) => {
-    // eslint-disable-next-line no-console
-    console.log('Contact form submitted:', data)
-    // TODO: integrate with API
+  const [result, setResult] = useState('')
+  const [sending, setSending] = useState(false)
+  const onSubmit = async (data: ContactFormData) => {
+    setSending(true)
+    setResult('Sending...')
+
+try {
+      const infoParagraph = [
+        `A new contact enquiry has been received through the XO Enterprise website. "${data.yourName}" has submitted an enquiry and provided ${data.emailId} as their email address and "${data.yourPhone}" as their contact number.`,
+        `Their enquiry is as follows: "${data.message}"`,
+        'Kindly review the details and follow up with the visitor accordingly.',
+      ].join('\n\n')
+
+      const formData = new FormData()
+      formData.append('access_key', import.meta.env.VITE_WEB3FORMS_ACCESS_KEY)
+      formData.append('subject', data.subject)
+      formData.append('Info', infoParagraph)
+
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const responseData = await response.json()
+
+      if (responseData.success) {
+        setResult('Form submitted successfully!')
+        reset()
+      } else {
+        setResult(
+          responseData.message || 'Something went wrong. Please try again.'
+        )
+      }
+    } catch {
+      setResult('Network error. Please try again.')
+    } finally {
+      setSending(false)
+    }
   }
 
   const sharedBoxSx = {
@@ -205,7 +242,6 @@ export default function ContactPage() {
                     {...register('subject', {
                       required: 'Subject is required',
                     })}
-                    error={!!errors.subject}
                     helperText={errors.subject?.message || ' '}
                   />
 
@@ -231,6 +267,7 @@ export default function ContactPage() {
                     color='error'
                     size='large'
                     fullWidth
+                    disabled={sending}
                     sx={{
                       fontWeight: 700,
                       textTransform: 'none',
@@ -238,8 +275,23 @@ export default function ContactPage() {
                       borderRadius: 1,
                     }}
                   >
-                    Submit
+                    {sending ? (
+                      <CircularProgress size={24} color='inherit' />
+                    ) : (
+                      'Send Message'
+                    )}
                   </Button>
+
+                  {/* Result feedback */}
+                  {result && (
+                    <Typography
+                      variant='body2'
+                      color={result === 'Form submitted successfully!' ? 'success.main' : 'error.main'}
+                      sx={{ textAlign: 'center' }}
+                    >
+                      {result}
+                    </Typography>
+                  )}
                 </Stack>
               </form>
             </Box>

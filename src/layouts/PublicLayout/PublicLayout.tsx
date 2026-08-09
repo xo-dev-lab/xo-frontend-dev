@@ -12,7 +12,6 @@ import IconButton from '@mui/material/IconButton'
 import List from '@mui/material/List'
 import ListItem from '@mui/material/ListItem'
 import ListItemButton from '@mui/material/ListItemButton'
-import ListItemText from '@mui/material/ListItemText'
 import type { Theme } from '@mui/material/styles'
 import Typography from '@mui/material/Typography'
 
@@ -23,6 +22,7 @@ import LinkedInIcon from '@mui/icons-material/LinkedIn'
 import MenuIcon from '@mui/icons-material/Menu'
 
 import logoImg from '../../assets/logo.jpeg'
+import { ListItemText } from '@mui/material'
 
 const SOCIALS = [
   { label: 'Facebook', icon: <FacebookIcon sx={{ fontSize: 18 }} /> },

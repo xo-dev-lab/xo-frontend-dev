@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import {
   Dialog,
@@ -9,6 +10,7 @@ import {
   Box,
   TextField,
   Button,
+  CircularProgress,
   useMediaQuery,
   useTheme,
 } from '@mui/material'
@@ -83,6 +85,7 @@ export default function InquiryDialog({
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<InquiryFormData>({
     defaultValues: {
@@ -97,9 +100,46 @@ export default function InquiryDialog({
     },
   })
 
-  const onSubmit = (data: InquiryFormData) => {
-    alert(JSON.stringify(data, null, 2))
-    onClose()
+  const [result, setResult] = useState('')
+  const [sending, setSending] = useState(false)
+
+  const onSubmit = async (data: InquiryFormData) => {
+    setSending(true)
+    setResult('Sending...')
+
+try {
+      const infoParagraph = [
+        `A new product enquiry has been submitted through the XO Enterprise website for "${data.product}".`,
+        `The enquiry was submitted by "${data.yourName}" from "${data.companyName}", located in "${data.city}". The customer can be contacted at "${data.email}" or "${data.phoneNumber}" and has specified a required quantity of "${data.quantity}".`,
+        `The customer's requirement is as follows: "${data.message}".`,
+        'Please review the enquiry and contact the customer for further discussion.',
+      ].join('\n\n')
+
+      const formData = new FormData()
+      formData.append('access_key', import.meta.env.VITE_WEB3FORMS_ACCESS_KEY)
+      formData.append('Info', infoParagraph)
+
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const responseData = await response.json()
+
+if (responseData.success) {
+        setResult('Inquiry submitted successfully!')
+        reset()
+        onClose()
+      } else {
+        setResult(
+          responseData.message || 'Something went wrong. Please try again.'
+        )
+      }
+    } catch {
+      setResult('Network error. Please try again.')
+    } finally {
+      setSending(false)
+    }
   }
 
   /* Prevent closing when user clicks on the backdrop */
@@ -268,6 +308,7 @@ export default function InquiryDialog({
               variant='contained'
               color='error'
               size='large'
+              disabled={sending}
               sx={{
                 fontWeight: 700,
                 textTransform: 'none',
@@ -275,9 +316,28 @@ export default function InquiryDialog({
                 px: 4,
               }}
             >
-              Submit Inquiry
+              {sending ? (
+                <CircularProgress size={24} color='inherit' />
+              ) : (
+                'Submit Inquiry'
+              )}
             </Button>
           </DialogActions>
+
+          {/* Result feedback */}
+          {result && (
+            <Typography
+              variant='body2'
+              color={
+                result === 'Inquiry submitted successfully!'
+                  ? 'success.main'
+                  : 'error.main'
+              }
+              sx={{ textAlign: 'center', pb: 1 }}
+            >
+              {result}
+            </Typography>
+          )}
         </DialogContent>
       </form>
     </Dialog>
