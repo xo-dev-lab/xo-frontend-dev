@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -14,10 +15,14 @@ import InputAdornment from '@mui/material/InputAdornment'
 import SearchIcon from '@mui/icons-material/Search'
 
 import PageContainer from '@/components/common/ui/PageContainer/PageContainer'
-import { products } from './productData'
+import { apiClient } from '@/services/api/client'
+import { type ProductListResponse } from '@/types/product'
+import Loader from '@/components/common/ui/Loader/Loader'
+import EmptyState from '@/components/common/ui/EmptyState/EmptyState'
 
-const categories = [...new Set(products.map((p) => p.category))]
-const brands = [...new Set(products.map((p) => p.brand))]
+const PLACEHOLDER_IMAGE = 'https://placehold.co/600x500/0F172A/E53935?text=Product'
+
+const formatPrice = (price: string) => `$${Number(price).toLocaleString()}`
 
 export default function ProductsPage() {
   const navigate = useNavigate()
@@ -27,7 +32,30 @@ export default function ProductsPage() {
   const [selectedBrand, setSelectedBrand] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState<string>('')
 
+  const {
+    data: products,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['public-products'],
+    queryFn: async () => {
+      const res = await apiClient.get<ProductListResponse>('/api/products')
+      return res.data.data
+    },
+  })
+
+  const categories = useMemo(
+    () => [...new Set((products ?? []).map((p) => p.category).filter(Boolean))] as string[],
+    [products]
+  )
+
+  const brands = useMemo(
+    () => [...new Set((products ?? []).map((p) => p.brand).filter(Boolean))] as string[],
+    [products]
+  )
+
   const filteredProducts = useMemo(() => {
+    if (!products) return []
     return products.filter((product) => {
       const matchesCategory =
         !selectedCategory || product.category === selectedCategory
@@ -36,10 +64,12 @@ export default function ProductsPage() {
       const matchesSearch =
         !searchQuery ||
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase())
+        (product.description ?? '')
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())
       return matchesCategory && matchesBrand && matchesSearch
     })
-  }, [selectedCategory, selectedBrand, searchQuery])
+  }, [products, selectedCategory, selectedBrand, searchQuery])
 
   return (
     <PageContainer>
@@ -119,7 +149,14 @@ export default function ProductsPage() {
         </Box>
 
         {/* Products Grid */}
-        {filteredProducts.length > 0 ? (
+        {isLoading ? (
+          <Loader />
+        ) : error ? (
+          <EmptyState
+            title='Failed to load products'
+            description='Please try again later.'
+          />
+        ) : filteredProducts.length > 0 ? (
           <Box
             sx={{
               display: 'grid',
@@ -146,9 +183,19 @@ export default function ProductsPage() {
                 }}
               >
                 <CardContent>
-                  <Box sx={{ color: 'black', mb: 1.5, textAlign: 'center' }}>
-                    {product.icon}
-                  </Box>
+                  <Box
+                    component='img'
+                    src={product.images[0] ?? PLACEHOLDER_IMAGE}
+                    alt={product.name}
+                    sx={{
+                      width: '100%',
+                      height: 150,
+                      objectFit: 'contain',
+                      bgcolor: '#F1F5F9',
+                      borderRadius: 1,
+                      mb: 1.5,
+                    }}
+                  />
                   <Typography variant='subtitle1' fontWeight={700} gutterBottom>
                     {product.name}
                   </Typography>
@@ -160,7 +207,7 @@ export default function ProductsPage() {
                     {product.description}
                   </Typography>
                   <Typography variant='h6' fontWeight={700} sx={{ mb: 1.5 }}>
-                    {product.price}
+                    {formatPrice(product.price)}
                   </Typography>
                   <Box sx={{ textAlign: 'center' }}>
                     <Button
@@ -177,12 +224,12 @@ export default function ProductsPage() {
             ))}
           </Box>
         ) : (
-          <Typography variant='body1' color='text.secondary' textAlign='center' sx={{ py: 6 }}>
-            No products match the current filters.
-          </Typography>
+          <EmptyState
+            title='No products found'
+            description='No products match the current filters.'
+          />
         )}
       </Box>
     </PageContainer>
   )
 }
-

@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
@@ -14,14 +15,31 @@ import AddIcon from '@mui/icons-material/Add'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 
 import PageContainer from '@/components/common/ui/PageContainer/PageContainer'
-import { products } from '@/features/public/products/productData'
+import { apiClient } from '@/services/api/client'
+import { type ProductDetailResponse } from '@/types/product'
+import Loader from '@/components/common/ui/Loader/Loader'
 import InquiryDialog from './InquiryDialog'
+
+const PLACEHOLDER_IMAGE = 'https://placehold.co/600x500/0F172A/E53935?text=Product'
+
+const formatPrice = (price: string) => `$${Number(price).toLocaleString()}`
 
 export default function ProductDetailsPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  const product = products.find((p) => p.id === Number(id))
+  const {
+    data: product,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['product', id],
+    queryFn: async () => {
+      const res = await apiClient.get<ProductDetailResponse>(`/api/products/${id}`)
+      return res.data.data
+    },
+    enabled: !!id,
+  })
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [quantity, setQuantity] = useState(1)
@@ -29,7 +47,17 @@ export default function ProductDetailsPage() {
   const [inquiryOpen, setInquiryOpen] = useState(false)
   const thumbnailScrollRef = useRef<HTMLDivElement>(null)
 
-  if (!product) {
+  if (isLoading) {
+    return (
+      <PageContainer>
+        <Box sx={{ px: { xs: 3, md: 10 }, py: { xs: 4, md: 6 } }}>
+          <Loader />
+        </Box>
+      </PageContainer>
+    )
+  }
+
+  if (!product || error) {
     return (
       <PageContainer>
         <Box sx={{ px: { xs: 3, md: 10 }, py: { xs: 4, md: 6 } }}>
@@ -57,7 +85,7 @@ export default function ProductDetailsPage() {
     )
   }
 
-  const images = product.images
+  const images = product.images.length > 0 ? product.images : [PLACEHOLDER_IMAGE]
 
   const scrollThumbnails = (direction: 'left' | 'right') => {
     if (thumbnailScrollRef.current) {
@@ -229,7 +257,7 @@ export default function ProductDetailsPage() {
               color='error'
               sx={{ mb: 2.5 }}
             >
-              {product.price}
+              {formatPrice(product.price)}
             </Typography>
 
             {/* Description */}
