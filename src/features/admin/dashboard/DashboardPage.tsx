@@ -10,10 +10,14 @@ import {
   TableHead,
   TableRow,
   Button,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material'
 import {
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   PieChart,
   Pie,
   Cell,
@@ -22,55 +26,90 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from 'recharts'
+import { useNavigate } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+
+import { apiClient } from '@/services/api/client'
+import {
+  type InquiriesResponse,
+  type InquiryGraphResponse,
+  mapInquiryRow,
+} from '@/types/inquiry'
+import Loader from '@/components/common/ui/Loader/Loader'
 
 /* ------------------------------------------------------------------ */
-/*  Dummy data                                                         */
+/*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-const leadsOverviewData = [
-  { month: 'Jan', leads: 40 },
-  { month: 'Feb', leads: 55 },
-  { month: 'Mar', leads: 30 },
-  { month: 'Apr', leads: 70 },
-  { month: 'May', leads: 90 },
-  { month: 'Jun', leads: 110 },
-  { month: 'Jul', leads: 85 },
-  { month: 'Aug', leads: 95 },
-  { month: 'Sep', leads: 120 },
-  { month: 'Oct', leads: 140 },
-  { month: 'Nov', leads: 100 },
-  { month: 'Dec', leads: 130 },
+const MONTH_NAMES = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
 ]
 
-const leadsByStatusData = [
-  { status: 'New', count: 45 },
-  { status: 'Contacted', count: 80 },
-  { status: 'Qualified', count: 60 },
-  { status: 'Proposal', count: 35 },
-  { status: 'Negotiation', count: 25 },
-  { status: 'Closed Won', count: 50 },
-  { status: 'Closed Lost', count: 20 },
-]
-
-const PIE_COLORS = ['#E53935', '#0F172A', '#FFB300', '#4CAF50', '#2196F3', '#9C27B0', '#FF5722']
-
-const inquiryRows = [
-  { name: 'Amit Sharma', product: 'Industrial Lathe Machine', phone: '+91-9876543210', email: 'amit.sharma@email.com', date: '2026-07-20' },
-  { name: 'Priya Patel', product: 'CNC Milling Machine', phone: '+91-9876543211', email: 'priya.patel@email.com', date: '2026-07-19' },
-  { name: 'Rajesh Kumar', product: 'Hydraulic Press 200T', phone: '+91-9876543212', email: 'rajesh.k@email.com', date: '2026-07-18' },
-  { name: 'Sunita Verma', product: 'Packaging Conveyor Belt', phone: '+91-9876543213', email: 'sunita.v@email.com', date: '2026-07-17' },
-  { name: 'Vikram Singh', product: 'Air Compressor 50HP', phone: '+91-9876543214', email: 'vikram.singh@email.com', date: '2026-07-16' },
-]
+const PIE_COLORS = ['#E53935', '#0F172A']
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
-import { useNavigate } from 'react-router-dom'
-
 export default function DashboardPage() {
   const navigate = useNavigate()
+
+  const [month, setMonth] = useState<number>(() => new Date().getMonth() + 1)
+  const [year, setYear] = useState<number>(() => new Date().getFullYear())
+
+  const years = useMemo(() => {
+    const current = new Date().getFullYear()
+    return [current, current - 1]
+  }, [])
+
+  /* ---- Latest inquiries (for the table) ---- */
+  const {
+    data: inquiries,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['admin-inquiries'],
+    queryFn: async () => {
+      const res = await apiClient.get<InquiriesResponse>('/api/inquiries')
+      return res.data.data
+    },
+  })
+
+  const recentInquiries = (inquiries ?? []).map(mapInquiryRow).slice(0, 5)
+
+  /* ---- Selected-month counts (stat boxes + pie + bar) ---- */
+  const graphQuery = useQuery({
+    queryKey: ['admin-graph', month, year],
+    queryFn: async () => {
+      const res = await apiClient.get<InquiryGraphResponse>(
+        `/api/inquiries/graph?month=${month}&year=${year}`
+      )
+      return res.data
+    },
+  })
+
+  const monthlyCounts = graphQuery.data
+
+  const pieData = [
+    { name: 'Product Enquiries', value: monthlyCounts?.enquiry ?? 0 },
+    { name: 'Contact Messages', value: monthlyCounts?.contact ?? 0 },
+  ]
+
+  const totalCount = (monthlyCounts?.enquiry ?? 0) + (monthlyCounts?.contact ?? 0)
   return (
     <Box>
       {/* Welcome card */}
@@ -89,17 +128,48 @@ export default function DashboardPage() {
         <Typography variant='body2' color='text.secondary'>
           Manage your XoEnterprise platform from here.
         </Typography>
+
+        {/* Month & Year selector */}
+        <Box sx={{ display: 'flex', gap: 2, mt: 2, flexWrap: 'wrap' }}>
+          <FormControl size='small' sx={{ minWidth: 140 }}>
+            <InputLabel>Month</InputLabel>
+            <Select
+              value={month}
+              label='Month'
+              onChange={(e) => setMonth(Number(e.target.value))}
+            >
+              {MONTH_NAMES.map((m, index) => (
+                <MenuItem key={m} value={index + 1}>
+                  {m}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl size='small' sx={{ minWidth: 110 }}>
+            <InputLabel>Year</InputLabel>
+            <Select
+              value={year}
+              label='Year'
+              onChange={(e) => setYear(Number(e.target.value))}
+            >
+              {years.map((y) => (
+                <MenuItem key={y} value={y}>
+                  {y}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
       </Paper>
 
       {/* Stats cards */}
       <Grid container spacing={3} mb={3}>
         {[
-          { label: 'Total Products', value: '1,284' },
-          { label: 'Active Users', value: '3,572' },
-          { label: 'Orders', value: '847' },
-          { label: 'Revenue', value: '$1,28,450' },
+          { label: 'Product Enquiries', value: monthlyCounts?.enquiry ?? 0, color: 'primary.main' },
+          { label: 'Contact Messages', value: monthlyCounts?.contact ?? 0, color: 'secondary.main' },
+          { label: 'Total Inquiries', value: totalCount, color: 'error.main' },
         ].map((item) => (
-          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={item.label}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.label}>
             <Paper
               sx={{
                 p: 3,
@@ -109,11 +179,11 @@ export default function DashboardPage() {
                 textAlign: 'center',
               }}
             >
-              <Typography variant='h4' fontWeight={800} color='primary.main'>
-                {item.value}
+              <Typography variant='h4' fontWeight={800} color={item.color}>
+                {graphQuery.isPending ? '—' : Number(item.value).toLocaleString()}
               </Typography>
               <Typography variant='body2' color='text.secondary' mt={1}>
-                {item.label}
+                {item.label} · {MONTH_NAMES[month - 1]} {year}
               </Typography>
             </Paper>
           </Grid>
@@ -122,7 +192,7 @@ export default function DashboardPage() {
 
       {/* Charts row */}
       <Grid container spacing={3} mb={3}>
-        {/* Leads Overview — Line Chart */}
+        {/* Inquiries by Source — Bar Chart */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper
             sx={{
@@ -134,28 +204,33 @@ export default function DashboardPage() {
             }}
           >
             <Typography variant='h6' fontWeight={700} color='secondary.main' mb={2}>
-              Leads Overview
+              Inquiries by Source · {MONTH_NAMES[month - 1]} {year}
             </Typography>
-            <ResponsiveContainer width='100%' height={300}>
-              <LineChart data={leadsOverviewData}>
-                <CartesianGrid strokeDasharray='3 3' />
-                <XAxis dataKey='month' tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Line
-                  type='monotone'
-                  dataKey='leads'
-                  stroke='#E53935'
-                  strokeWidth={2}
-                  dot={{ fill: '#E53935', r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {graphQuery.isPending ? (
+              <Loader />
+            ) : (
+              <ResponsiveContainer width='100%' height={300}>
+                <BarChart data={pieData}>
+                  <CartesianGrid strokeDasharray='3 3' />
+                  <XAxis dataKey='name' tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey='value' name='Inquiries' radius={[6, 6, 0, 0]}>
+                    {pieData.map((_, index) => (
+                      <Cell
+                        key={index}
+                        fill={PIE_COLORS[index % PIE_COLORS.length]}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </Paper>
         </Grid>
 
-        {/* Leads by Status — Pie Chart */}
+        {/* Inquiries by Source — Pie Chart */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper
             sx={{
@@ -167,64 +242,81 @@ export default function DashboardPage() {
             }}
           >
             <Typography variant='h6' fontWeight={700} color='secondary.main' mb={2}>
-              Leads by Status
+              Inquiries by Source · {MONTH_NAMES[month - 1]} {year}
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              {/* Pie chart on the left */}
-              <Box sx={{ flex: '0 0 55%' }}>
-                <ResponsiveContainer width='100%' height={280}>
-                  <PieChart>
-                    <Pie
-                      data={leadsByStatusData}
-                      dataKey='count'
-                      nameKey='sta. +tus'
-                      cx='50%'
-                      cy='50%'
-                      outerRadius={100}
-                      innerRadius={50}
-                    >
-                      {leadsByStatusData.map((_, index) => (
-                        <Cell
-                          key={index}
-                          fill={PIE_COLORS[index % PIE_COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </Box>
-
-              {/* Custom vertical legend on the right */}
+            {graphQuery.isPending ? (
+              <Loader />
+            ) : totalCount === 0 ? (
               <Box
                 sx={{
-                  flex: '0 0 40%',
+                  height: 280,
                   display: 'flex',
-                  flexDirection: 'column',
-                  gap: 1.5,
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
-                {leadsByStatusData.map((item, index) => (
-                  <Box
-                    key={item.status}
-                    sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
-                  >
-                    <Box
-                      sx={{
-                        width: 14,
-                        height: 14,
-                        borderRadius: '50%',
-                        flexShrink: 0,
-                        bgcolor: PIE_COLORS[index % PIE_COLORS.length],
-                      }}
-                    />
-                    <Typography variant='body2' color='text.secondary'>
-                      {item.status}
-                    </Typography>
-                  </Box>
-                ))}
+                <Typography variant='body2' color='text.secondary'>
+                  No inquiries for this month.
+                </Typography>
               </Box>
-            </Box>
+            ) : (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                {/* Pie chart on the left */}
+                <Box sx={{ flex: '0 0 55%' }}>
+                  <ResponsiveContainer width='100%' height={280}>
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        dataKey='value'
+                        nameKey='name'
+                        cx='50%'
+                        cy='50%'
+                        outerRadius={100}
+                        innerRadius={50}
+                      >
+                        {pieData.map((_, index) => (
+                          <Cell
+                            key={index}
+                            fill={PIE_COLORS[index % PIE_COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </Box>
+
+                {/* Custom vertical legend on the right */}
+                <Box
+                  sx={{
+                    flex: '0 0 40%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 1.5,
+                  }}
+                >
+                  {pieData.map((item, index) => (
+                    <Box
+                      key={item.name}
+                      sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                    >
+                      <Box
+                        sx={{
+                          width: 14,
+                          height: 14,
+                          borderRadius: '50%',
+                          flexShrink: 0,
+                          bgcolor: PIE_COLORS[index % PIE_COLORS.length],
+                        }}
+                      />
+                      <Typography variant='body2' color='text.secondary'>
+                        {item.name}: {item.value}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            )}
           </Paper>
         </Grid>
       </Grid>
@@ -271,15 +363,39 @@ export default function DashboardPage() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {inquiryRows.map((row, index) => (
-                <TableRow key={index}>
-                  <TableCell>{row.name}</TableCell>
-                  <TableCell>{row.product}</TableCell>
-                  <TableCell>{row.phone}</TableCell>
-                  <TableCell>{row.email}</TableCell>
-                  <TableCell>{row.date}</TableCell>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} sx={{ py: 5 }}>
+                    <Loader />
+                  </TableCell>
                 </TableRow>
-              ))}
+              ) : error ? (
+                <TableRow>
+                  <TableCell colSpan={5} align='center' sx={{ py: 5 }}>
+                    <Typography variant='body2' color='text.secondary'>
+                      Failed to load inquiries.
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : recentInquiries.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} align='center' sx={{ py: 5 }}>
+                    <Typography variant='body2' color='text.secondary'>
+                      No inquiries yet.
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                recentInquiries.map((row, index) => (
+                  <TableRow key={row.id ?? index}>
+                    <TableCell>{row.customerName}</TableCell>
+                    <TableCell>{row.product}</TableCell>
+                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.phoneNumber}</TableCell>
+                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.email}</TableCell>
+                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.date}</TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </TableContainer>

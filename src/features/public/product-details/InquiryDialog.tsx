@@ -1,4 +1,6 @@
 import { useForm, Controller } from 'react-hook-form'
+import { useMutation } from '@tanstack/react-query'
+import { toast } from 'react-toastify'
 import {
   Dialog,
   DialogTitle,
@@ -13,6 +15,8 @@ import {
   useTheme,
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
+
+import { apiClient } from '@/services/api/client'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -29,10 +33,28 @@ interface InquiryFormData {
   message: string
 }
 
+interface InquiryPayload {
+  source: 'enquiry'
+  product_id: number
+  User_Name: string
+  company_name?: string
+  phone: string
+  email: string
+  city: string
+  quantity?: number
+  message: string
+}
+
+interface InquiryResponse {
+  success: boolean
+  message?: string
+}
+
 interface InquiryDialogProps {
   open: boolean
   onClose: () => void
   productName: string
+  productId: number
   initialQuantity: number
 }
 
@@ -75,6 +97,7 @@ export default function InquiryDialog({
   open,
   onClose,
   productName,
+  productId,
   initialQuantity,
 }: InquiryDialogProps) {
   const theme = useTheme()
@@ -83,6 +106,7 @@ export default function InquiryDialog({
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<InquiryFormData>({
     defaultValues: {
@@ -97,9 +121,43 @@ export default function InquiryDialog({
     },
   })
 
+  const { mutate: submitInquiry, isPending: isSubmitting } = useMutation({
+    mutationFn: async (payload: InquiryPayload) => {
+      const res = await apiClient.post<InquiryResponse>('/api/inquiries', payload)
+      return res.data
+    },
+    onSuccess: (res) => {
+      toast.success(res.message || 'Your enquiry has been submitted successfully.')
+      reset({
+        product: productName,
+        yourName: '',
+        companyName: '',
+        phoneNumber: '',
+        email: '',
+        city: '',
+        quantity: initialQuantity,
+        message: '',
+      })
+      onClose()
+    },
+    onError: (err: unknown) => {
+      const axiosError = err as { response?: { data?: { message?: string } } }
+      toast.error(axiosError.response?.data?.message || 'Failed to submit. Please try again later.')
+    },
+  })
+
   const onSubmit = (data: InquiryFormData) => {
-    alert(JSON.stringify(data, null, 2))
-    onClose()
+    submitInquiry({
+      source: 'enquiry',
+      product_id: productId,
+      User_Name: data.yourName,
+      company_name: data.companyName || undefined,
+      phone: data.phoneNumber,
+      email: data.email,
+      city: data.city,
+      quantity: data.quantity,
+      message: data.message,
+    })
   }
 
   /* Prevent closing when user clicks on the backdrop */
@@ -268,6 +326,7 @@ export default function InquiryDialog({
               variant='contained'
               color='error'
               size='large'
+              disabled={isSubmitting}
               sx={{
                 fontWeight: 700,
                 textTransform: 'none',
@@ -275,7 +334,7 @@ export default function InquiryDialog({
                 px: 4,
               }}
             >
-              Submit Inquiry
+              {isSubmitting ? 'Submitting...' : 'Submit Inquiry'}
             </Button>
           </DialogActions>
         </DialogContent>

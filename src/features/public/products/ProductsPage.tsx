@@ -19,8 +19,7 @@ import { apiClient } from '@/services/api/client'
 import { type ProductListResponse } from '@/types/product'
 import Loader from '@/components/common/ui/Loader/Loader'
 import EmptyState from '@/components/common/ui/EmptyState/EmptyState'
-
-const PLACEHOLDER_IMAGE = 'https://placehold.co/600x500/0F172A/E53935?text=Product'
+import ProductImage from '@/components/common/ui/ProductImage/ProductImage'
 
 const formatPrice = (price: string) => `$${Number(price).toLocaleString()}`
 
@@ -183,9 +182,8 @@ export default function ProductsPage() {
                 }}
               >
                 <CardContent>
-                  <Box
-                    component='img'
-                    src={product.images[0] ?? PLACEHOLDER_IMAGE}
+                  <ProductImage
+                    src={product.images[0]}
                     alt={product.name}
                     sx={{
                       width: '100%',

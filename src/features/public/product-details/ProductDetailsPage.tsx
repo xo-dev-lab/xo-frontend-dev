@@ -18,9 +18,10 @@ import PageContainer from '@/components/common/ui/PageContainer/PageContainer'
 import { apiClient } from '@/services/api/client'
 import { type ProductDetailResponse } from '@/types/product'
 import Loader from '@/components/common/ui/Loader/Loader'
+import ProductImage, {
+  PLACEHOLDER_IMAGE,
+} from '@/components/common/ui/ProductImage/ProductImage'
 import InquiryDialog from './InquiryDialog'
-
-const PLACEHOLDER_IMAGE = 'https://placehold.co/600x500/0F172A/E53935?text=Product'
 
 const formatPrice = (price: string) => `$${Number(price).toLocaleString()}`
 
@@ -134,8 +135,7 @@ export default function ProductDetailsPage() {
                 mb: 2,
               }}
             >
-              <Box
-                component='img'
+              <ProductImage
                 src={images[selectedImageIndex]}
                 alt={`${product.name} - Image ${selectedImageIndex + 1}`}
                 sx={{
@@ -198,8 +198,7 @@ export default function ProductDetailsPage() {
                       '&:hover': { opacity: 1 },
                     }}
                   >
-                    <Box
-                      component='img'
+                    <ProductImage
                       src={img}
                       alt={`Thumbnail ${index + 1}`}
                       sx={{
@@ -495,6 +494,7 @@ export default function ProductDetailsPage() {
         open={inquiryOpen}
         onClose={() => setInquiryOpen(false)}
         productName={product.name}
+        productId={product.id}
         initialQuantity={quantity}
       />
     </PageContainer>

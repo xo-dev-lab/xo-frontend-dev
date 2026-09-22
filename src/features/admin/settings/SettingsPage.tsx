@@ -1,18 +1,20 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import {
   Box,
-  Typography,
   Paper,
   Tabs,
   Tab,
   TextField,
   Button,
-  IconButton,
   Grid,
   Chip,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
+
+import { apiClient } from '@/services/api/client'
+import { type CompanyDetails, type CompanyDetailsResponse } from '@/types/companyDetails'
 
 /* ------------------------------------------------------------------ */
 /*  Tab panel helper                                                    */
@@ -33,31 +35,23 @@ function TabPanel({ children, value, index }: TabPanelProps) {
 /*  Initial data                                                       */
 /* ------------------------------------------------------------------ */
 
-const initialGeneral = {
-  email: 'info@xoenterprise.com',
-  phone: '+91-9876543210',
-  openingDays: 'Monday – Saturday',
-  openingTime: '09:00 AM',
-  closingTime: '07:00 PM',
-  facebook: 'https://facebook.com/xoenterprise',
-  instagram: 'https://instagram.com/xoenterprise',
-  linkedin: 'https://linkedin.com/company/xoenterprise',
-  twitter: 'https://twitter.com/xoenterprise',
-  registeredOffice: 'Plot No. 123, Sector 12, Industrial Area, Mumbai – 400001, Maharashtra, India',
-  currentOffice: 'B-45, Tech Park, Phase II, Electronic City, Bangalore – 560100, Karnataka, India',
+const initialGeneral: CompanyDetails = {
+  email: '',
+  phone: '',
+  openingDays: '',
+  openingTime: '',
+  closingTime: '',
+  facebook: '',
+  instagram: '',
+  linkedin: '',
+  twitter: '',
+  registeredOffice: '',
+  currentOffice: '',
+  about: '',
 }
 
-const initialCategories: string[] = [
-  'Solar Panels',
-  'Inverters',
-  'Batteries',
-  'Accessories',
-  'Charge Controllers',
-  'Mounting Structures',
-  'Cables & Wiring',
-  'Hardware',
-]
-
+/* ---- Services state (commented out - not handled currently) ---- */
+/*
 const initialServices: { id: number; name: string; description: string }[] = [
   { id: 1, name: 'CCTV Installation', description: 'Professional CCTV installation services for homes and businesses.' },
   { id: 2, name: 'AMC & Maintenance', description: 'Comprehensive maintenance and support services for your IT infrastructure.' },
@@ -68,6 +62,7 @@ const initialServices: { id: number; name: string; description: string }[] = [
   { id: 7, name: 'Corporate Network Solutions', description: 'Complete network solutions for businesses, including design, implementation, and management.' },
   { id: 8, name: 'System Integration', description: 'Seamless integration of various systems for optimal performance.' },
 ]
+*/
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -77,36 +72,96 @@ export default function SettingsPage() {
   const [tabValue, setTabValue] = useState(0)
 
   /* ---- General state ---- */
-  const [general, setGeneral] = useState(initialGeneral)
+  const [general, setGeneral] = useState<CompanyDetails>(initialGeneral)
 
   /* ---- Categories state ---- */
-  const [categories, setCategories] = useState<string[]>(initialCategories)
+  const [categories, setCategories] = useState<string[]>([])
   const [newCategory, setNewCategory] = useState('')
 
-  /* ---- Services state ---- */
-  const [services, setServices] = useState(initialServices)
-  const [newServiceName, setNewServiceName] = useState('')
-  const [newServiceDesc, setNewServiceDesc] = useState('')
+  /* ---- Fetch company details on page load ---- */
+  const {
+    data: companyDetails,
+    refetch,
+  } = useQuery({
+    queryKey: ['company-details'],
+    queryFn: async () => {
+      const res = await apiClient.get<CompanyDetailsResponse>('/api/company-details')
+      return res.data.data
+    },
+  })
+
+  useEffect(() => {
+    if (companyDetails) {
+      setGeneral({
+        email: companyDetails.email ?? '',
+        phone: companyDetails.phone ?? '',
+        openingDays: companyDetails.openingDays ?? '',
+        openingTime: companyDetails.openingTime ?? '',
+        closingTime: companyDetails.closingTime ?? '',
+        facebook: companyDetails.facebook ?? '',
+        instagram: companyDetails.instagram ?? '',
+        linkedin: companyDetails.linkedin ?? '',
+        twitter: companyDetails.twitter ?? '',
+        registeredOffice: companyDetails.registeredOffice ?? '',
+        currentOffice: companyDetails.currentOffice ?? '',
+        about: companyDetails.about ?? '',
+      })
+      setCategories(companyDetails.categories ?? [])
+    }
+  }, [companyDetails])
+
+  /* ---- Save company details ---- */
+  const { mutate: saveCompanyDetails, isPending: isSaving } = useMutation({
+    mutationFn: async (payload: CompanyDetails) => {
+      await apiClient.put('/api/company-details', payload)
+    },
+    onSuccess: () => {
+      refetch()
+    },
+  })
+
+  const { mutate: saveCategories, isPending: isSavingCategories } = useMutation({
+    mutationFn: async (payload: CompanyDetails) => {
+      await apiClient.put('/api/company-details', payload)
+    },
+    onSuccess: () => {
+      refetch()
+    },
+  })
 
   /* ---- General handlers ---- */
-  const handleGeneralChange = (field: keyof typeof initialGeneral) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setGeneral((prev) => ({ ...prev, [field]: e.target.value }))
+  const handleGeneralChange =
+    (field: keyof CompanyDetails) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      setGeneral((prev) => ({ ...prev, [field]: e.target.value }))
+    }
+
+  const handleSaveGeneral = () => {
+    saveCompanyDetails(general)
   }
 
   /* ---- Category handlers ---- */
   const handleAddCategory = () => {
     const trimmed = newCategory.trim()
     if (trimmed && !categories.includes(trimmed)) {
-      setCategories((prev) => [...prev, trimmed])
+      const next = [...categories, trimmed]
+      setCategories(next)
       setNewCategory('')
+      saveCategories({ ...general, categories: next })
     }
   }
 
   const handleRemoveCategory = (cat: string) => {
-    setCategories((prev) => prev.filter((c) => c !== cat))
+    const next = categories.filter((c) => c !== cat)
+    setCategories(next)
+    saveCategories({ ...general, categories: next })
   }
 
-  /* ---- Service handlers ---- */
+  /* ---- Services handlers (commented out - not handled currently) ---- */
+  /*
+  const [services, setServices] = useState(initialServices)
+  const [newServiceName, setNewServiceName] = useState('')
+  const [newServiceDesc, setNewServiceDesc] = useState('')
+
   const handleAddService = () => {
     const name = newServiceName.trim()
     const desc = newServiceDesc.trim()
@@ -120,6 +175,7 @@ export default function SettingsPage() {
   const handleRemoveService = (id: number) => {
     setServices((prev) => prev.filter((s) => s.id !== id))
   }
+  */
 
   /* ---------------------------------------------------------------- */
   /*  Render                                                           */
@@ -146,7 +202,7 @@ export default function SettingsPage() {
         >
           <Tab label='General' />
           <Tab label='Product Categories' />
-          <Tab label='Services' />
+          {/* <Tab label='Services' /> */}
         </Tabs>
 
         {/* ==================== General Tab ==================== */}
@@ -263,11 +319,28 @@ export default function SettingsPage() {
                   onChange={handleGeneralChange('currentOffice')}
                 />
               </Grid>
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  fullWidth
+                  label='About'
+                  size='small'
+                  multiline
+                  rows={4}
+                  value={general.about}
+                  onChange={handleGeneralChange('about')}
+                />
+              </Grid>
             </Grid>
 
             <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-              <Button variant='contained' color='primary' sx={{ borderRadius: 2, px: 4 }}>
-                Save General
+              <Button
+                variant='contained'
+                color='primary'
+                sx={{ borderRadius: 2, px: 4 }}
+                onClick={handleSaveGeneral}
+                disabled={isSaving}
+              >
+                {isSaving ? 'Saving...' : 'Save General'}
               </Button>
             </Box>
           </Box>
@@ -310,6 +383,7 @@ export default function SettingsPage() {
                 color='primary'
                 startIcon={<AddIcon />}
                 onClick={handleAddCategory}
+                disabled={isSavingCategories}
                 sx={{ borderRadius: 2 }}
               >
                 Add Category
@@ -318,10 +392,10 @@ export default function SettingsPage() {
           </Box>
         </TabPanel>
 
-        {/* ==================== Services Tab ==================== */}
+        {/* ==================== Services Tab (commented out - not handled currently) ==================== */}
+        {/*
         <TabPanel value={tabValue} index={2}>
           <Box sx={{ px: 3, pb: 3 }}>
-            {/* Existing services */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mb: 4 }}>
               {services.map((svc) => (
                 <Paper
@@ -356,7 +430,6 @@ export default function SettingsPage() {
               ))}
             </Box>
 
-            {/* Add new service */}
             <Typography variant='subtitle2' fontWeight={700} color='secondary.main' mb={1.5}>
               Add New Service
             </Typography>
@@ -389,6 +462,7 @@ export default function SettingsPage() {
             </Box>
           </Box>
         </TabPanel>
+        */}
       </Paper>
     </Box>
   )

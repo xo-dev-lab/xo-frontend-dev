@@ -1,10 +1,27 @@
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import { useTheme } from '@mui/material/styles'
+import { useQuery } from '@tanstack/react-query'
 import aboutUsImg from '@/assets/AboutUs.png'
+
+import { apiClient } from '@/services/api/client'
+import { type CompanyDetailsResponse } from '@/types/companyDetails'
 
 export default function About() {
   const theme = useTheme()
+
+  const { data: companyDetails } = useQuery({
+    queryKey: ['company-details'],
+    queryFn: async () => {
+      const res = await apiClient.get<CompanyDetailsResponse>('/api/company-details')
+      return res.data.data
+    },
+  })
+
+  const paragraphs = (companyDetails?.about || '')
+    .split(/\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean)
 
   return (
 <Box id="about-us" sx={{ py: { xs: 4, md: 6 }, px: { xs: 3, md: 10 } }}>
@@ -43,12 +60,7 @@ export default function About() {
           >
             About XO Enterprise
           </Typography>
-          {[
-            'XO Enterprises Was established in 2017. I believe in saying that a friend is one who takes me for what I am.',
-            'Being Owner of XO Enterprises, I have first got the experience of 10 year in this field and gathered the technical as well as the theoretical knowledge. I realize the fact that no one can stand in market without sharing his/her interests with other.',
-            `With support of all companies employees, XO enterprises is able to create a steady sales increase and growing number of clients are showing their trust/confidence rapidly. This is all due to everyone's diligent untiring contribution towards the company.`,
-            'The progress of economy, thriving of the society, and the improvement of people&rsquo;s daily lives create the demand for security facility.',
-          ].map((paragraph, index) => (
+          {paragraphs.map((paragraph, index) => (
             <Typography
               key={index}
               variant='body1'
@@ -57,7 +69,7 @@ export default function About() {
                 lineHeight: 1.8,
                 fontSize: { xs: '0.95rem', md: '1rem' },
                 textAlign: 'justify',
-                mb: index < 6 ? 2 : 0,
+                mb: index < paragraphs.length - 1 ? 2 : 0,
               }}
             >
               {paragraph}

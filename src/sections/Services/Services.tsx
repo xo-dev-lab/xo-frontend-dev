@@ -12,54 +12,103 @@ import BuildIcon from '@mui/icons-material/Build'
 import SecurityIcon from '@mui/icons-material/Security'
 import SpeedIcon from '@mui/icons-material/Speed'
 import StorageIcon from '@mui/icons-material/Storage'
+import HubIcon from '@mui/icons-material/Hub'
+import TvIcon from '@mui/icons-material/Tv'
+import GridViewIcon from '@mui/icons-material/GridView'
+import RadarIcon from '@mui/icons-material/Radar'
+import CallIcon from '@mui/icons-material/Call'
+import DnsIcon from '@mui/icons-material/Dns'
+import FingerprintIcon from '@mui/icons-material/Fingerprint'
 
 import SectionTitle from '@/components/common/ui/SectionTitle/SectionTitle'
 
 const products = [
   {
     id: 1,
+    icon: <HubIcon sx={{ fontSize: 56 }} />,
+    name: 'Networking',
+    description: 'Reliable network design, installation, and management for seamless connectivity.',
+  },
+  {
+    id: 2,
+    icon: <TvIcon sx={{ fontSize: 56 }} />,
+    name: 'LED TV and Monitoring',
+    description: 'High-quality LED TV installation and professional display monitoring solutions.',
+  },
+  {
+    id: 3,
+    icon: <GridViewIcon sx={{ fontSize: 56 }} />,
+    name: 'LED Wall and Interactive Panels',
+    description: 'Bold LED walls and interactive panels for impactful presentations and engagement.',
+  },
+  {
+    id: 4,
+    icon: <RadarIcon sx={{ fontSize: 56 }} />,
+    name: 'Metal Detector',
+    description: 'Advanced metal detection systems for enhanced security and safety screening.',
+  },
+  {
+    id: 5,
+    icon: <CallIcon sx={{ fontSize: 56 }} />,
+    name: 'Intercom System',
+    description: 'Crystal-clear intercom systems for reliable internal and building communication.',
+  },
+  {
+    id: 6,
+    icon: <DnsIcon sx={{ fontSize: 56 }} />,
+    name: 'Computer and Server Setup',
+    description: 'Complete computer and server setup, configuration, and deployment services.',
+  },
+  {
+    id: 7,
+    icon: <FingerprintIcon sx={{ fontSize: 56 }} />,
+    name: 'Biometric Machine',
+    description: 'Secure biometric machines for accurate attendance and access control.',
+  },
+  {
+    id: 8,
     icon: <DevicesOtherIcon sx={{ fontSize: 56 }} />,
     name: 'CCTV Installation',
     description: 'Professional CCTV installation services for homes and businesses.',
   },
   {
-    id: 2,
+    id: 9,
     icon: <ComputerIcon sx={{ fontSize: 56 }} />,
     name: 'AMC & Maintenance',
     description: 'Comprehensive maintenance and support services for your IT infrastructure.',
   },
   {
-    id: 3,
+    id: 10,
     icon: <MemoryIcon sx={{ fontSize: 56 }} />,
     name: 'CCTV on Rent',
     description: 'Flexible rental options for temporary CCTV needs.',
   },
   {
-    id: 4,
+    id: 11,
     icon: <SettingsIcon sx={{ fontSize: 56 }} />,
     name: 'Access Control System',
     description: 'Complete access control solutions for secure entry management.',
   },
   {
-    id: 5,
+    id: 12,
     icon: <BuildIcon sx={{ fontSize: 56 }} />,
     name: 'Fire Safety Solutions',
     description: 'Comprehensive fire safety equipment and services.',
   },
   {
-    id: 6,
+    id: 13,
     icon: <SecurityIcon sx={{ fontSize: 56 }} />,
     name: '24x7 Support',
     description: 'Round-the-clock technical support and assistance.',
   },
   {
-    id: 7,
+    id: 14,
     icon: <SpeedIcon sx={{ fontSize: 56 }} />,
     name: 'Corporate Network Solutions',
     description: 'Complete network solutions for businesses, including design, implementation, and management.',
   },
   {
-    id: 8,
+    id: 15,
     icon: <StorageIcon sx={{ fontSize: 56 }} />,
     name: 'System Integration',
     description: 'Seamless integration of various systems for optimal performance.',
@@ -76,7 +125,7 @@ export default function Services() {
           gridTemplateColumns: {
             xs: 'repeat(2, 1fr)',
             sm: 'repeat(3, 1fr)',
-            md: 'repeat(4, 1fr)',
+            md: 'repeat(5, 1fr)',
           },
           gap: 2.5,
         }}

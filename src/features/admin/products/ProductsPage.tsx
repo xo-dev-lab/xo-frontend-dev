@@ -25,12 +25,11 @@ import { apiClient } from '@/services/api/client'
 import { type ProductListResponse } from '@/types/product'
 import Loader from '@/components/common/ui/Loader/Loader'
 import EmptyState from '@/components/common/ui/EmptyState/EmptyState'
+import ProductImage from '@/components/common/ui/ProductImage/ProductImage'
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
-
-const PLACEHOLDER_IMAGE = 'https://placehold.co/600x500/0F172A/E53935?text=Product'
 
 const formatPrice = (price: string) => `$${Number(price).toLocaleString()}`
 
@@ -142,9 +141,8 @@ export default function ProductsPage() {
                   <TableRow key={product.id} hover>
                     {/* Image */}
                     <TableCell>
-                      <Box
-                        component='img'
-                        src={product.images[0] ?? PLACEHOLDER_IMAGE}
+                      <ProductImage
+                        src={product.images[0]}
                         alt={product.name}
                         sx={{
                           width: 52,
