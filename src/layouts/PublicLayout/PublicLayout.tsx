@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 
@@ -6,15 +7,23 @@ import Toolbar from '@mui/material/Toolbar'
 import Box from '@mui/material/Box'
 import Container from '@mui/material/Container'
 import Button from '@mui/material/Button'
+import Divider from '@mui/material/Divider'
+import Drawer from '@mui/material/Drawer'
+import IconButton from '@mui/material/IconButton'
+import List from '@mui/material/List'
+import ListItem from '@mui/material/ListItem'
+import ListItemButton from '@mui/material/ListItemButton'
 import type { Theme } from '@mui/material/styles'
 import Typography from '@mui/material/Typography'
 
+import CloseIcon from '@mui/icons-material/Close'
 import FacebookIcon from '@mui/icons-material/Facebook'
 import InstagramIcon from '@mui/icons-material/Instagram'
 import LinkedInIcon from '@mui/icons-material/LinkedIn'
 import TwitterIcon from '@mui/icons-material/Twitter'
 
 import logoImg from '../../assets/logo.jpeg'
+import { ListItemText } from '@mui/material'
 
 import { apiClient } from '@/services/api/client'
 import { type CompanyDetailsResponse } from '@/types/companyDetails'
@@ -80,6 +89,7 @@ function scrollToSection(sectionId: string) {
 export default function PublicLayout() {
   const location = useLocation()
   const navigate = useNavigate()
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   const { data: companyDetails } = useQuery({
     queryKey: ['company-details'],
@@ -103,6 +113,37 @@ export default function PublicLayout() {
       }
     }
   }
+
+  const handleMobileNavClick = (item: NavItem) => {
+    setMobileOpen(false)
+    handleNavClick(item)
+  }
+
+  const renderNavItems = (isMobile = false) =>
+    navItems.map((item) => {
+      const key = 'to' in item ? item.to : item.scrollTo
+      const isActive =
+        'to' in item
+          ? item.to === '/'
+            ? location.pathname === '/'
+            : location.pathname.startsWith(item.to!)
+          : false
+      return (
+        <Button
+          key={key}
+          fullWidth={isMobile}
+          onClick={() => (isMobile ? handleMobileNavClick(item) : handleNavClick(item))}
+          sx={{
+            color: isActive ? 'primary.main' : 'secondary.main',
+            fontWeight: 800,
+            justifyContent: isMobile ? 'flex-start' : 'center',
+            '&:hover': { backgroundColor: 'transparent', color: 'primary.main' },
+          }}
+        >
+          {item.label}
+        </Button>
+      )
+    })
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -193,7 +234,7 @@ export default function PublicLayout() {
               })}
             </Box>
 
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Button
                 variant='contained'
                 color='primary'
@@ -202,10 +243,89 @@ export default function PublicLayout() {
               >
                 Request Quote
               </Button>
+
+              <IconButton
+                aria-label='Open navigation menu'
+                onClick={() => setMobileOpen(true)}
+                sx={{ display: { xs: 'inline-flex', md: 'none' }, color: 'secondary.main' }}
+              >
+                <MenuIcon />
+              </IconButton>
             </Box>
           </Container>
         </Toolbar>
       </AppBar>
+
+      <Drawer
+        anchor='right'
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: 280,
+            backgroundColor: 'background.default',
+            px: 2,
+            py: 2,
+          },
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box
+            component='img'
+            src={logoImg}
+            alt='XoEnterprise logo'
+            sx={{ width: 48, height: 48, borderRadius: 1, objectFit: 'cover' }}
+          />
+          <IconButton aria-label='Close navigation menu' onClick={() => setMobileOpen(false)} sx={{ color: 'secondary.main' }}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
+
+        <Divider sx={{ mb: 2 }} />
+
+        <List sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          {navItems.map((item) => {
+            const key = 'to' in item ? item.to : item.scrollTo
+            const isActive =
+              'to' in item
+                ? item.to === '/'
+                  ? location.pathname === '/'
+                  : location.pathname.startsWith(item.to!)
+                : false
+            return (
+              <ListItem key={key} disablePadding>
+                <ListItemButton
+                  onClick={() => handleMobileNavClick(item)}
+                  sx={{
+                    borderRadius: 1,
+                    color: isActive ? 'primary.main' : 'secondary.main',
+                    fontWeight: 800,
+                    '&:hover': { backgroundColor: 'transparent', color: 'primary.main' },
+                  }}
+                >
+                  <ListItemText primary={item.label} slotProps={{ primary: { fontWeight: 800 } }} />
+                </ListItemButton>
+              </ListItem>
+            )
+          })}
+        </List>
+
+        <Box sx={{ mt: 'auto', display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Divider />
+          <Button
+            variant='contained'
+            color='primary'
+            fullWidth
+            sx={{ borderRadius: 1, px: 3, py: 1.25 }}
+            onClick={() => {
+              setMobileOpen(false)
+              navigate('/contact')
+            }}
+          >
+            Request Quote
+          </Button>
+        </Box>
+      </Drawer>
 
       <Box component='main' sx={{ flex: 1 }}>
         <Outlet />
