@@ -20,6 +20,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import FacebookIcon from '@mui/icons-material/Facebook'
 import InstagramIcon from '@mui/icons-material/Instagram'
 import LinkedInIcon from '@mui/icons-material/LinkedIn'
+import MenuIcon from '@mui/icons-material/Menu'
 import TwitterIcon from '@mui/icons-material/Twitter'
 
 import logoImg from '../../assets/logo.jpeg'
@@ -118,32 +119,6 @@ export default function PublicLayout() {
     setMobileOpen(false)
     handleNavClick(item)
   }
-
-  const renderNavItems = (isMobile = false) =>
-    navItems.map((item) => {
-      const key = 'to' in item ? item.to : item.scrollTo
-      const isActive =
-        'to' in item
-          ? item.to === '/'
-            ? location.pathname === '/'
-            : location.pathname.startsWith(item.to!)
-          : false
-      return (
-        <Button
-          key={key}
-          fullWidth={isMobile}
-          onClick={() => (isMobile ? handleMobileNavClick(item) : handleNavClick(item))}
-          sx={{
-            color: isActive ? 'primary.main' : 'secondary.main',
-            fontWeight: 800,
-            justifyContent: isMobile ? 'flex-start' : 'center',
-            '&:hover': { backgroundColor: 'transparent', color: 'primary.main' },
-          }}
-        >
-          {item.label}
-        </Button>
-      )
-    })
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>

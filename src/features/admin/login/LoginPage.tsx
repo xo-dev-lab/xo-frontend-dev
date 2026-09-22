@@ -28,9 +28,7 @@ export default function LoginPage() {
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>()
 
-  const onSubmit = (data: LoginFormData) => {
-    // eslint-disable-next-line no-console
-    console.log('Admin login attempt:', data)
+  const onSubmit = () => {
     // TODO: integrate with authentication API
     navigate('/admin/dashboard')
   }

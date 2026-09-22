@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { useMutation } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
@@ -12,7 +11,6 @@ import {
   Box,
   TextField,
   Button,
-  CircularProgress,
   useMediaQuery,
   useTheme,
 } from '@mui/material'
@@ -339,21 +337,6 @@ export default function InquiryDialog({
               {isSubmitting ? 'Submitting...' : 'Submit Inquiry'}
             </Button>
           </DialogActions>
-
-          {/* Result feedback */}
-          {result && (
-            <Typography
-              variant='body2'
-              color={
-                result === 'Inquiry submitted successfully!'
-                  ? 'success.main'
-                  : 'error.main'
-              }
-              sx={{ textAlign: 'center', pb: 1 }}
-            >
-              {result}
-            </Typography>
-          )}
         </DialogContent>
       </form>
     </Dialog>

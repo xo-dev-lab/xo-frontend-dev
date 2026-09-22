@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
@@ -8,7 +7,6 @@ import {
   TextField,
   Grid,
   Stack,
-  CircularProgress,
 } from '@mui/material'
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined'
 import CallOutlinedIcon from '@mui/icons-material/CallOutlined'
@@ -368,17 +366,6 @@ export default function ContactPage() {
                   >
                     {isSubmitting ? 'Submitting...' : 'Submit'}
                   </Button>
-
-                  {/* Result feedback */}
-                  {result && (
-                    <Typography
-                      variant='body2'
-                      color={result === 'Form submitted successfully!' ? 'success.main' : 'error.main'}
-                      sx={{ textAlign: 'center' }}
-                    >
-                      {result}
-                    </Typography>
-                  )}
                 </Stack>
               </form>
             </Box>

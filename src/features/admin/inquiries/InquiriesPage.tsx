@@ -86,7 +86,7 @@ export default function InquiriesPage() {
     }
 
     return result
-  }, [searchQuery, dateFrom, dateTo])
+  }, [searchQuery, dateFrom, dateTo, inquiries])
 
   /* ---- Pagination calculations ---- */
   const totalPages = Math.ceil(filtered.length / pageSize)

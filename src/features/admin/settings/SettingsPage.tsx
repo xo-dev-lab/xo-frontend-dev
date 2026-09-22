@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import {
   Box,
@@ -90,25 +90,26 @@ export default function SettingsPage() {
     },
   })
 
-  useEffect(() => {
-    if (companyDetails) {
-      setGeneral({
-        email: companyDetails.email ?? '',
-        phone: companyDetails.phone ?? '',
-        openingDays: companyDetails.openingDays ?? '',
-        openingTime: companyDetails.openingTime ?? '',
-        closingTime: companyDetails.closingTime ?? '',
-        facebook: companyDetails.facebook ?? '',
-        instagram: companyDetails.instagram ?? '',
-        linkedin: companyDetails.linkedin ?? '',
-        twitter: companyDetails.twitter ?? '',
-        registeredOffice: companyDetails.registeredOffice ?? '',
-        currentOffice: companyDetails.currentOffice ?? '',
-        about: companyDetails.about ?? '',
-      })
-      setCategories(companyDetails.categories ?? [])
-    }
-  }, [companyDetails])
+  /* ---- Hydrate form state when company details are loaded ---- */
+  const [prevDetails, setPrevDetails] = useState<CompanyDetails | undefined>(companyDetails)
+  if (companyDetails && companyDetails !== prevDetails) {
+    setPrevDetails(companyDetails)
+    setGeneral({
+      email: companyDetails.email ?? '',
+      phone: companyDetails.phone ?? '',
+      openingDays: companyDetails.openingDays ?? '',
+      openingTime: companyDetails.openingTime ?? '',
+      closingTime: companyDetails.closingTime ?? '',
+      facebook: companyDetails.facebook ?? '',
+      instagram: companyDetails.instagram ?? '',
+      linkedin: companyDetails.linkedin ?? '',
+      twitter: companyDetails.twitter ?? '',
+      registeredOffice: companyDetails.registeredOffice ?? '',
+      currentOffice: companyDetails.currentOffice ?? '',
+      about: companyDetails.about ?? '',
+    })
+    setCategories(companyDetails.categories ?? [])
+  }
 
   /* ---- Save company details ---- */
   const { mutate: saveCompanyDetails, isPending: isSaving } = useMutation({
