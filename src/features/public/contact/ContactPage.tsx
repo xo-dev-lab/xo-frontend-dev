@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { toast } from 'react-toastify'
 import {
   Box,
   Typography,
@@ -15,6 +17,8 @@ import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined'
 
 import PageContainer from '@/components/common/ui/PageContainer/PageContainer'
 import Button from '@/components/common/ui/Button/Button'
+import { apiClient } from '@/services/api/client'
+import { type CompanyDetailsResponse } from '@/types/companyDetails'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -24,8 +28,24 @@ interface ContactFormData {
   yourName: string
   yourPhone: string
   emailId: string
+  city: string
   subject: string
   message: string
+}
+
+interface ContactInquiryPayload {
+  source: 'contact'
+  User_Name: string
+  phone: string
+  email: string
+  city: string
+  subject: string
+  message: string
+}
+
+interface InquiryResponse {
+  success: boolean
+  message?: string
 }
 
 /* ------------------------------------------------------------------ */
@@ -76,44 +96,37 @@ export default function ContactPage() {
     formState: { errors },
   } = useForm<ContactFormData>()
 
-  const [result, setResult] = useState('')
-  const [sending, setSending] = useState(false)
-  const onSubmit = async (data: ContactFormData) => {
-    setSending(true)
-    setResult('Sending...')
+  // const onSubmit = (data: ContactFormData) => {
+  //   // eslint-disable-next-line no-console
+  //   console.log('Contact form submitted:', data)
+  //   // TODO: integrate with API
+  // }
 
-try {
-      const infoParagraph = [
-        `A new contact enquiry has been received through the XO Enterprise website. "${data.yourName}" has submitted an enquiry and provided ${data.emailId} as their email address and "${data.yourPhone}" as their contact number.`,
-        `Their enquiry is as follows: "${data.message}"`,
-        'Kindly review the details and follow up with the visitor accordingly.',
-      ].join('\n\n')
+  const { mutate: submitInquiry, isPending: isSubmitting } = useMutation({
+    mutationFn: async (payload: ContactInquiryPayload) => {
+      const res = await apiClient.post<InquiryResponse>('/api/inquiries', payload)
+      return res.data
+    },
+    onSuccess: (res) => {
+      toast.success(res.message || 'Your message has been submitted successfully.')
+      reset()
+    },
+    onError: (err: unknown) => {
+      const axiosError = err as { response?: { data?: { message?: string } } }
+      toast.error(axiosError.response?.data?.message || 'Failed to submit. Please try again later.')
+    },
+  })
 
-      const formData = new FormData()
-      formData.append('access_key', import.meta.env.VITE_WEB3FORMS_ACCESS_KEY)
-      formData.append('subject', data.subject)
-      formData.append('Info', infoParagraph)
-
-      const response = await fetch('https://api.web3forms.com/submit', {
-        method: 'POST',
-        body: formData,
-      })
-
-      const responseData = await response.json()
-
-      if (responseData.success) {
-        setResult('Form submitted successfully!')
-        reset()
-      } else {
-        setResult(
-          responseData.message || 'Something went wrong. Please try again.'
-        )
-      }
-    } catch {
-      setResult('Network error. Please try again.')
-    } finally {
-      setSending(false)
-    }
+  const onSubmit = (data: ContactFormData) => {
+    submitInquiry({
+      source: 'contact',
+      User_Name: data.yourName,
+      phone: data.yourPhone,
+      email: data.emailId,
+      city: data.city,
+      subject: data.subject,
+      message: data.message,
+    })
   }
 
   const sharedBoxSx = {
@@ -124,6 +137,71 @@ try {
     height: '100%',
     bgcolor: 'background.paper',
   }
+
+  const { data: companyDetails } = useQuery({
+    queryKey: ['company-details'],
+    queryFn: async () => {
+      const res = await apiClient.get<CompanyDetailsResponse>('/api/company-details')
+      return res.data.data
+    },
+  })
+
+  const splitLines = (value?: string) =>
+    (value || '').split(/\n+/).map((s) => s.trim()).filter(Boolean)
+
+  const contactInfo: ContactInfoEntry[] = (() => {
+    if (!companyDetails) return CONTACT_INFO
+
+    const entries: ContactInfoEntry[] = []
+
+    const registeredLines = splitLines(companyDetails.registeredOffice)
+    if (registeredLines.length) {
+      entries.push({
+        icon: <LocationOnOutlinedIcon sx={{ color: 'primary.main', fontSize: 28 }} />,
+        label: 'Registered Office',
+        lines: registeredLines,
+      })
+    }
+
+    const currentLines = splitLines(companyDetails.currentOffice)
+    if (currentLines.length) {
+      entries.push({
+        icon: <LocationOnOutlinedIcon sx={{ color: 'primary.main', fontSize: 28 }} />,
+        label: 'Current Office',
+        lines: currentLines,
+      })
+    }
+
+    const phoneLines = splitLines(companyDetails.phone)
+    if (phoneLines.length) {
+      entries.push({
+        icon: <CallOutlinedIcon sx={{ color: 'primary.main', fontSize: 28 }} />,
+        lines: phoneLines,
+      })
+    }
+
+    const emailLines = splitLines(companyDetails.email)
+    if (emailLines.length) {
+      entries.push({
+        icon: <EmailOutlinedIcon sx={{ color: 'primary.main', fontSize: 28 }} />,
+        lines: emailLines,
+      })
+    }
+
+    const timeRange = [companyDetails.openingTime, companyDetails.closingTime]
+      .filter(Boolean)
+      .join(' - ')
+    const hoursLine = [companyDetails.openingDays, timeRange].filter(Boolean).join(': ')
+    if (hoursLine) {
+      entries.push({
+        icon: <AccessTimeOutlinedIcon sx={{ color: 'primary.main', fontSize: 28 }} />,
+        label: 'Operating Time',
+        lines: [hoursLine],
+      })
+    }
+
+    return entries
+  })()
 
   return (
     <PageContainer>
@@ -138,7 +216,7 @@ try {
               </Typography>
 
               <Stack spacing={3}>
-                {CONTACT_INFO.map((entry, index) => (
+                {contactInfo.map((entry, index) => (
                   <Box key={index} sx={{ display: 'flex', gap: 1.5 }}>
                     <Box sx={{ mt: 0.3, flexShrink: 0 }}>{entry.icon}</Box>
                     <Box>
@@ -233,6 +311,19 @@ try {
                     helperText={errors.emailId?.message || ' '}
                   />
 
+                  {/* City */}
+                  <TextField
+                    label='Your City'
+                    fullWidth
+                    size='small'
+                    required
+                    {...register('city', {
+                      required: 'City is required',
+                    })}
+                    error={!!errors.city}
+                    helperText={errors.city?.message || ' '}
+                  />
+
                   {/* Subject */}
                   <TextField
                     label='Subject'
@@ -267,7 +358,7 @@ try {
                     color='error'
                     size='large'
                     fullWidth
-                    disabled={sending}
+                    disabled={isSubmitting}
                     sx={{
                       fontWeight: 700,
                       textTransform: 'none',
@@ -275,11 +366,7 @@ try {
                       borderRadius: 1,
                     }}
                   >
-                    {sending ? (
-                      <CircularProgress size={24} color='inherit' />
-                    ) : (
-                      'Send Message'
-                    )}
+                    {isSubmitting ? 'Submitting...' : 'Submit'}
                   </Button>
 
                   {/* Result feedback */}

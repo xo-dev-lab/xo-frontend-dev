@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { toast } from 'react-toastify'
 import {
   Box,
   Typography,
@@ -16,6 +18,10 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
+
+import { apiClient } from '@/services/api/client'
+import { type ProductItem } from '@/types/product'
+import { type CompanyDetailsResponse } from '@/types/companyDetails'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -41,7 +47,17 @@ interface DownloadEntry {
   url: string
 }
 
-const CATEGORIES = ['Hardware', 'Components', 'Networking', 'Software']
+interface UploadImagesResponse {
+  success: boolean
+  urls?: string[]
+}
+
+interface SaveProductResponse {
+  success: boolean
+  message?: string
+}
+
+const FALLBACK_CATEGORIES = ['Hardware', 'Components', 'Networking', 'Software']
 
 const emptyForm: ProductFormData = {
   name: '',
@@ -62,16 +78,33 @@ const emptyForm: ProductFormData = {
 /*  Helpers                                                           */
 /* ------------------------------------------------------------------ */
 
-const getDefaultForm = (editData?: ProductFormData): ProductFormData =>
-  editData
-    ? { ...emptyForm, ...editData }
-    : {
-        ...emptyForm,
-        specifications: [''],
-        applications: [''],
-        downloads: [{ label: '', url: '' }],
-        keyFeatures: [''],
-      }
+const getDefaultForm = (editData?: ProductItem): ProductFormData => {
+  if (!editData) {
+    return {
+      ...emptyForm,
+      specifications: [''],
+      applications: [''],
+      downloads: [{ label: '', url: '' }],
+      keyFeatures: [''],
+    }
+  }
+  return {
+    name: editData.name ?? '',
+    category: editData.category ?? '',
+    brand: editData.brand ?? '',
+    price: editData.price ?? '',
+    inStock: true,
+    shortDescription: editData.description ?? '',
+    longDescription: editData.tabDescription ?? '',
+    specifications: editData.specifications?.length ? editData.specifications : [''],
+    applications: editData.applications?.length ? editData.applications : [''],
+    downloads: editData.downloads?.length
+      ? editData.downloads.map((d) => ({ label: d.label, url: d.url ?? '' }))
+      : [{ label: '', url: '' }],
+    images: editData.images ?? [],
+    keyFeatures: editData.keyFeatures?.length ? editData.keyFeatures : [''],
+  }
+}
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -81,10 +114,25 @@ export default function AddProductPage() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const editProduct = (location.state as { product?: ProductFormData })?.product
+  const editProduct = (location.state as { product?: ProductItem })?.product
   const isEditMode = Boolean(editProduct)
+  const productId = editProduct?.id
 
   const [form, setForm] = useState<ProductFormData>(() => getDefaultForm(editProduct))
+  const [uploadingImages, setUploadingImages] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const { data: companyDetails } = useQuery({
+    queryKey: ['company-details'],
+    queryFn: async () => {
+      const res = await apiClient.get<CompanyDetailsResponse>('/api/company-details')
+      return res.data.data
+    },
+  })
+
+  const categories = companyDetails?.categories?.length
+    ? companyDetails.categories
+    : FALLBACK_CATEGORIES
 
   /* ---- Generic field updater ---- */
   const updateField = <K extends keyof ProductFormData>(
@@ -132,26 +180,79 @@ export default function AddProductPage() {
       return { ...prev, downloads: updated }
     })
 
-  const addImage = () => {
-    const url = prompt('Enter image URL:')
-    if (url) {
-      setForm((prev) => ({ ...prev, images: [...prev.images, url] }))
-    }
-  }
-
   const removeImage = (index: number) =>
     setForm((prev) => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== index),
     }))
 
+  const handleImageFiles = async (files: FileList | null) => {
+    const imageFiles = Array.from(files ?? []).filter((f) => f.type.startsWith('image/'))
+    if (!imageFiles.length) return
+
+    setUploadingImages(true)
+    try {
+      const formData = new FormData()
+      imageFiles.forEach((file) => formData.append('images', file))
+
+      const res = await apiClient.post<UploadImagesResponse>(
+        '/api/products/upload-images',
+        formData
+      )
+
+      if (res.data.urls?.length) {
+        setForm((prev) => ({ ...prev, images: [...prev.images, ...(res.data.urls as string[])] }))
+      }
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { message?: string } } }
+      toast.error(axiosError.response?.data?.message || 'Failed to upload images.')
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      setUploadingImages(false)
+    }
+  }
+
   const handleCancel = () => {
     navigate('/admin/products')
   }
 
+  const { mutate: saveProduct, isPending: isSaving } = useMutation({
+    mutationFn: async () => {
+      const payload = {
+        id: isEditMode ? productId : undefined,
+        icon: form.images[0] ?? undefined,
+        name: form.name.trim(),
+        category: form.category.trim() || undefined,
+        brand: form.brand.trim() || undefined,
+        price: form.price.trim(),
+        description: form.shortDescription.trim(),
+        images: form.images,
+        keyFeatures: form.keyFeatures.map((s) => s.trim()).filter(Boolean),
+        tabContent: {
+          description: form.longDescription.trim(),
+          specifications: form.specifications.map((s) => s.trim()).filter(Boolean),
+          applications: form.applications.map((s) => s.trim()).filter(Boolean),
+          downloads: form.downloads
+            .map((d) => ({ label: d.label.trim(), url: d.url.trim() }))
+            .filter((d) => d.label && d.url),
+        },
+      }
+
+      const res = await apiClient.post<SaveProductResponse>('/api/products/addproduct', payload)
+      return res.data
+    },
+    onSuccess: (res) => {
+      toast.success(res.message || 'Product saved successfully.')
+      navigate('/admin/products')
+    },
+    onError: (err: unknown) => {
+      const axiosError = err as { response?: { data?: { message?: string } } }
+      toast.error(axiosError.response?.data?.message || 'Failed to save product.')
+    },
+  })
+
   const handleSave = () => {
-    // TODO: API call to save product
-    navigate('/admin/products')
+    saveProduct()
   }
 
   /* ---- Shared dynamic list renderer ---- */
@@ -242,7 +343,7 @@ export default function AddProductPage() {
                     value={form.category}
                     onChange={(e) => updateField('category', e.target.value)}
                   >
-                    {CATEGORIES.map((cat) => (
+                    {categories.map((cat) => (
                       <MenuItem key={cat} value={cat}>
                         {cat}
                       </MenuItem>
@@ -445,15 +546,24 @@ export default function AddProductPage() {
             )}
 
             {/* Add Images button */}
+            <input
+              ref={fileInputRef}
+              type='file'
+              accept='image/*'
+              multiple
+              hidden
+              onChange={(e) => handleImageFiles(e.target.files)}
+            />
             <Button
               variant='outlined'
               color='primary'
               startIcon={<CloudUploadIcon />}
-              onClick={addImage}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingImages}
               fullWidth
               sx={{ borderRadius: 2 }}
             >
-              + Add Images
+              {uploadingImages ? 'Uploading Images...' : '+ Add Images'}
             </Button>
           </Paper>
 
@@ -477,8 +587,9 @@ export default function AddProductPage() {
           color='primary'
           sx={{ borderRadius: 2, px: 4 }}
           onClick={handleSave}
+          disabled={isSaving}
         >
-          Save Product
+          {isSaving ? 'Saving...' : 'Save Product'}
         </Button>
       </Box>
     </Box>

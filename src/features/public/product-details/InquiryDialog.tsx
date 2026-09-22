@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
+import { useMutation } from '@tanstack/react-query'
+import { toast } from 'react-toastify'
 import {
   Dialog,
   DialogTitle,
@@ -16,6 +18,8 @@ import {
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 
+import { apiClient } from '@/services/api/client'
+
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
@@ -31,10 +35,28 @@ interface InquiryFormData {
   message: string
 }
 
+interface InquiryPayload {
+  source: 'enquiry'
+  product_id: number
+  User_Name: string
+  company_name?: string
+  phone: string
+  email: string
+  city: string
+  quantity?: number
+  message: string
+}
+
+interface InquiryResponse {
+  success: boolean
+  message?: string
+}
+
 interface InquiryDialogProps {
   open: boolean
   onClose: () => void
   productName: string
+  productId: number
   initialQuantity: number
 }
 
@@ -77,6 +99,7 @@ export default function InquiryDialog({
   open,
   onClose,
   productName,
+  productId,
   initialQuantity,
 }: InquiryDialogProps) {
   const theme = useTheme()
@@ -100,46 +123,43 @@ export default function InquiryDialog({
     },
   })
 
-  const [result, setResult] = useState('')
-  const [sending, setSending] = useState(false)
-
-  const onSubmit = async (data: InquiryFormData) => {
-    setSending(true)
-    setResult('Sending...')
-
-try {
-      const infoParagraph = [
-        `A new product enquiry has been submitted through the XO Enterprise website for "${data.product}".`,
-        `The enquiry was submitted by "${data.yourName}" from "${data.companyName}", located in "${data.city}". The customer can be contacted at "${data.email}" or "${data.phoneNumber}" and has specified a required quantity of "${data.quantity}".`,
-        `The customer's requirement is as follows: "${data.message}".`,
-        'Please review the enquiry and contact the customer for further discussion.',
-      ].join('\n\n')
-
-      const formData = new FormData()
-      formData.append('access_key', import.meta.env.VITE_WEB3FORMS_ACCESS_KEY)
-      formData.append('Info', infoParagraph)
-
-      const response = await fetch('https://api.web3forms.com/submit', {
-        method: 'POST',
-        body: formData,
+  const { mutate: submitInquiry, isPending: isSubmitting } = useMutation({
+    mutationFn: async (payload: InquiryPayload) => {
+      const res = await apiClient.post<InquiryResponse>('/api/inquiries', payload)
+      return res.data
+    },
+    onSuccess: (res) => {
+      toast.success(res.message || 'Your enquiry has been submitted successfully.')
+      reset({
+        product: productName,
+        yourName: '',
+        companyName: '',
+        phoneNumber: '',
+        email: '',
+        city: '',
+        quantity: initialQuantity,
+        message: '',
       })
+      onClose()
+    },
+    onError: (err: unknown) => {
+      const axiosError = err as { response?: { data?: { message?: string } } }
+      toast.error(axiosError.response?.data?.message || 'Failed to submit. Please try again later.')
+    },
+  })
 
-      const responseData = await response.json()
-
-if (responseData.success) {
-        setResult('Inquiry submitted successfully!')
-        reset()
-        onClose()
-      } else {
-        setResult(
-          responseData.message || 'Something went wrong. Please try again.'
-        )
-      }
-    } catch {
-      setResult('Network error. Please try again.')
-    } finally {
-      setSending(false)
-    }
+  const onSubmit = (data: InquiryFormData) => {
+    submitInquiry({
+      source: 'enquiry',
+      product_id: productId,
+      User_Name: data.yourName,
+      company_name: data.companyName || undefined,
+      phone: data.phoneNumber,
+      email: data.email,
+      city: data.city,
+      quantity: data.quantity,
+      message: data.message,
+    })
   }
 
   /* Prevent closing when user clicks on the backdrop */
@@ -308,7 +328,7 @@ if (responseData.success) {
               variant='contained'
               color='error'
               size='large'
-              disabled={sending}
+              disabled={isSubmitting}
               sx={{
                 fontWeight: 700,
                 textTransform: 'none',
@@ -316,11 +336,7 @@ if (responseData.success) {
                 px: 4,
               }}
             >
-              {sending ? (
-                <CircularProgress size={24} color='inherit' />
-              ) : (
-                'Submit Inquiry'
-              )}
+              {isSubmitting ? 'Submitting...' : 'Submit Inquiry'}
             </Button>
           </DialogActions>
 

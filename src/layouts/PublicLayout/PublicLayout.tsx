@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 
 import AppBar from '@mui/material/AppBar'
 import Toolbar from '@mui/material/Toolbar'
@@ -19,15 +20,21 @@ import CloseIcon from '@mui/icons-material/Close'
 import FacebookIcon from '@mui/icons-material/Facebook'
 import InstagramIcon from '@mui/icons-material/Instagram'
 import LinkedInIcon from '@mui/icons-material/LinkedIn'
-import MenuIcon from '@mui/icons-material/Menu'
+import TwitterIcon from '@mui/icons-material/Twitter'
 
 import logoImg from '../../assets/logo.jpeg'
 import { ListItemText } from '@mui/material'
 
-const SOCIALS = [
-  { label: 'Facebook', icon: <FacebookIcon sx={{ fontSize: 18 }} /> },
-  { label: 'Instagram', icon: <InstagramIcon sx={{ fontSize: 18 }} /> },
-  { label: 'LinkedIn', icon: <LinkedInIcon sx={{ fontSize: 18 }} /> },
+import { apiClient } from '@/services/api/client'
+import { type CompanyDetailsResponse } from '@/types/companyDetails'
+
+type SocialPlatform = 'facebook' | 'instagram' | 'linkedin' | 'twitter'
+
+const SOCIALS: { platform: SocialPlatform; label: string; icon: React.ReactElement }[] = [
+  { platform: 'facebook', label: 'Facebook', icon: <FacebookIcon sx={{ fontSize: 18 }} /> },
+  { platform: 'instagram', label: 'Instagram', icon: <InstagramIcon sx={{ fontSize: 18 }} /> },
+  { platform: 'linkedin', label: 'LinkedIn', icon: <LinkedInIcon sx={{ fontSize: 18 }} /> },
+  { platform: 'twitter', label: 'Twitter', icon: <TwitterIcon sx={{ fontSize: 18 }} /> },
 ]
 
 type NavItem =
@@ -84,6 +91,16 @@ export default function PublicLayout() {
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
 
+  const { data: companyDetails } = useQuery({
+    queryKey: ['company-details'],
+    queryFn: async () => {
+      const res = await apiClient.get<CompanyDetailsResponse>('/api/company-details')
+      return res.data.data
+    },
+  })
+
+  const socialURL = (platform: SocialPlatform) => companyDetails?.[platform] || '#'
+
   const handleNavClick = (item: NavItem) => {
     if ('to' in item) {
       navigate(item.to!)
@@ -139,9 +156,16 @@ export default function PublicLayout() {
         }}
       >
         <Container maxWidth={false} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant='body2' sx={{ fontWeight: 700 }}>
-            Email: info@xoenterprise.in
-          </Typography>
+          <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+            <Typography variant='body2' sx={{ fontWeight: 700 }}>
+              Email: {companyDetails?.email || 'info@xoenterprise.in'}
+            </Typography>
+            {companyDetails?.phone && (
+              <Typography variant='body2' sx={{ fontWeight: 700 }}>
+                Phone: {companyDetails.phone}
+              </Typography>
+            )}
+          </Box>
 
           <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
             <Typography variant='body2' sx={{ fontWeight: 700 }}>
@@ -151,7 +175,9 @@ export default function PublicLayout() {
               <Box
                 key={s.label}
                 component='a'
-                href='#'
+                href={socialURL(s.platform)}
+                target='_blank'
+                rel='noreferrer'
                 aria-label={s.label}
                 sx={{
                   width: 28,
@@ -187,7 +213,25 @@ export default function PublicLayout() {
             <HeaderLogo />
 
             <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1.5 }}>
-              {renderNavItems()}
+              {navItems.map((item) => {
+                const key = 'to' in item ? item.to : item.scrollTo
+                const isActive = 'to' in item
+                  ? (item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to!))
+                  : false
+                return (
+                  <Button
+                    key={key}
+                    onClick={() => handleNavClick(item)}
+                    sx={{
+                      color: isActive ? 'primary.main' : 'secondary.main',
+                      fontWeight: 800,
+                      '&:hover': { backgroundColor: 'transparent', color: 'primary.main' },
+                    }}
+                  >
+                    {item.label}
+                  </Button>
+                )
+              })}
             </Box>
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

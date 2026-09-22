@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
   Box,
   Typography,
@@ -20,149 +21,14 @@ import SearchIcon from '@mui/icons-material/Search'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 
-/* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
-
-interface InquiryRow {
-  id: number
-  product: string
-  customerName: string
-  companyName: string
-  phoneNumber: string
-  email: string
-  city: string
-  quantity: number
-  message: string
-  date: string
-}
-
-/* ------------------------------------------------------------------ */
-/*  Dummy data                                                         */
-/* ------------------------------------------------------------------ */
-
-const inquiries: InquiryRow[] = [
-  {
-    id: 1,
-    product: 'Enterprise Server',
-    customerName: 'Amit Sharma',
-    companyName: 'TechCorp India',
-    phoneNumber: '+91-9876543210',
-    email: 'amit.sharma@email.com',
-    city: 'Mumbai',
-    quantity: 5,
-    message: 'We need servers for our new data center. Please provide bulk pricing.',
-    date: '2026-07-20',
-  },
-  {
-    id: 2,
-    product: 'Workstation Pro',
-    customerName: 'Priya Patel',
-    companyName: 'DesignWave Studio',
-    phoneNumber: '+91-9876543211',
-    email: 'priya.patel@email.com',
-    city: 'Bangalore',
-    quantity: 10,
-    message: 'Requirement for 3D rendering workstations with dual monitors.',
-    date: '2026-07-19',
-  },
-  {
-    id: 3,
-    product: 'Security Gateway',
-    customerName: 'Rajesh Kumar',
-    companyName: 'FinSafe Ltd.',
-    phoneNumber: '+91-9876543212',
-    email: 'rajesh.k@email.com',
-    city: 'Delhi',
-    quantity: 3,
-    message: 'Need firewall appliances for branch office security compliance.',
-    date: '2026-07-18',
-  },
-  {
-    id: 4,
-    product: 'NAS Storage Array',
-    customerName: 'Sunita Verma',
-    companyName: 'MediaPro Productions',
-    phoneNumber: '+91-9876543213',
-    email: 'sunita.v@email.com',
-    city: 'Pune',
-    quantity: 2,
-    message: 'Looking for high-capacity NAS for video storage and backup.',
-    date: '2026-07-17',
-  },
-  {
-    id: 5,
-    product: 'Edge Router X9',
-    customerName: 'Vikram Singh',
-    companyName: 'ConnectNet ISP',
-    phoneNumber: '+91-9876543214',
-    email: 'vikram.singh@email.com',
-    city: 'Hyderabad',
-    quantity: 15,
-    message: 'Bulk order for CPE deployment across 15 branch locations.',
-    date: '2026-07-16',
-  },
-  {
-    id: 6,
-    product: 'Memory Module 32GB',
-    customerName: 'Anjali Mehta',
-    companyName: 'DataCore Systems',
-    phoneNumber: '+91-9876543215',
-    email: 'anjali.mehta@email.com',
-    city: 'Chennai',
-    quantity: 100,
-    message: 'Requirement for server memory upgrade. Requesting volume discount.',
-    date: '2026-07-15',
-  },
-  {
-    id: 7,
-    product: 'Network Accelerator',
-    customerName: 'Suresh Reddy',
-    companyName: 'CloudLink Solutions',
-    phoneNumber: '+91-9876543216',
-    email: 'suresh.reddy@email.com',
-    city: 'Ahmedabad',
-    quantity: 4,
-    message: 'Need WAN optimization appliances for inter-office connectivity.',
-    date: '2026-07-14',
-  },
-  {
-    id: 8,
-    product: 'Mobile Management',
-    customerName: 'Neha Gupta',
-    companyName: 'HealthFirst Clinics',
-    phoneNumber: '+91-9876543217',
-    email: 'neha.gupta@email.com',
-    city: 'Jaipur',
-    quantity: 1,
-    message: 'Need UEM solution for managing 50+ mobile devices across clinics.',
-    date: '2026-07-13',
-  },
-  {
-    id: 9,
-    product: 'Enterprise Server',
-    customerName: 'Rohit Desai',
-    companyName: 'EduTech Innovations',
-    phoneNumber: '+91-9876543218',
-    email: 'rohit.desai@email.com',
-    city: 'Lucknow',
-    quantity: 2,
-    message: 'Servers for hosting LMS and student portal. Need quotation.',
-    date: '2026-07-12',
-  },
-  {
-    id: 10,
-    product: 'Workstation Pro',
-    customerName: 'Kavita Joshi',
-    companyName: 'ArchVision Designs',
-    phoneNumber: '+91-9876543219',
-    email: 'kavita.joshi@email.com',
-    city: 'Kolkata',
-    quantity: 6,
-    message: 'Workstations for architectural CAD/BIM team.',
-    date: '2026-07-11',
-  },
-]
+import { apiClient } from '@/services/api/client'
+import {
+  type InquiriesResponse,
+  type InquiryRow,
+  mapInquiryRow,
+} from '@/types/inquiry'
+import Loader from '@/components/common/ui/Loader/Loader'
+import EmptyState from '@/components/common/ui/EmptyState/EmptyState'
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50]
 
@@ -171,6 +37,23 @@ const PAGE_SIZE_OPTIONS = [10, 25, 50]
 /* ------------------------------------------------------------------ */
 
 export default function InquiriesPage() {
+  const {
+    data: inquiryRows,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['admin-inquiries'],
+    queryFn: async () => {
+      const res = await apiClient.get<InquiriesResponse>('/api/inquiries')
+      return res.data.data
+    },
+  })
+
+  const inquiries: InquiryRow[] = useMemo(
+    () => (inquiryRows ?? []).map(mapInquiryRow),
+    [inquiryRows]
+  )
+
   /* ---- Filters ---- */
   const [searchQuery, setSearchQuery] = useState('')
   const [dateFrom, setDateFrom] = useState('')
@@ -295,8 +178,21 @@ export default function InquiriesPage() {
           overflow: 'hidden',
         }}
       >
-        <TableContainer>
-          <Table>
+        {isLoading ? (
+          <Loader />
+        ) : error ? (
+          <EmptyState
+            title='Failed to load inquiries'
+            description='Please try again later.'
+          />
+        ) : (
+          <>
+        <TableContainer
+          sx={{
+            maxHeight: 'calc(100vh - 210px)',
+          }}
+        >
+          <Table stickyHeader>
             <TableHead sx={{ bgcolor: '#F1F5F9' }}>
               <TableRow>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>#</TableCell>
@@ -330,7 +226,7 @@ export default function InquiriesPage() {
                     <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.phoneNumber}</TableCell>
                     <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.email}</TableCell>
                     <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.city}</TableCell>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.quantity}</TableCell>
+                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.quantity ?? '—'}</TableCell>
                     <TableCell sx={{ minWidth: 220, maxWidth: 300 }}>
                       <Typography variant='body2' color='text.secondary' sx={{ lineHeight: 1.4 }}>
                         {row.message}
@@ -409,7 +305,9 @@ export default function InquiriesPage() {
               <ChevronRightIcon />
             </IconButton>
           </Box>
-        </Box>
+          </Box>
+          </>
+        )}
       </Paper>
     </Box>
   )

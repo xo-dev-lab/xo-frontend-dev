@@ -2,9 +2,13 @@ import { useNavigate } from 'react-router-dom'
 
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
+import { useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 
 import Button from '@/components/common/ui/Button/Button'
 import PageContainer from '@/components/common/ui/PageContainer/PageContainer'
+import { apiClient } from '@/services/api/client'
+import { type CompanyDetailsResponse } from '@/types/companyDetails'
 
 const features = [
   'Free Consultation',
@@ -15,6 +19,14 @@ const features = [
 
 export default function ContactCTA() {
   const navigate = useNavigate()
+
+  const { data: companyDetails } = useQuery({
+    queryKey: ['company-details'],
+    queryFn: async () => {
+      const res = await apiClient.get<CompanyDetailsResponse>('/api/company-details')
+      return res.data.data
+    },
+  })
 
   return (
     <Box
@@ -104,10 +116,10 @@ export default function ContactCTA() {
           {/* Contact info */}
           <Box sx={{ mt: 3 }}>
             <Typography variant='body2' sx={{ opacity: 0.8 }}>
-              Call : +91 XXXXX XXXXX
+              Call : {companyDetails?.phone || '+91 XXXXX XXXXX'}
             </Typography>
             <Typography variant='body2' sx={{ opacity: 0.8 }}>
-              Email: sales@xoenterprises.com
+              Email: {companyDetails?.email || 'sales@xoenterprises.com'}
             </Typography>
           </Box>
         </Box>
