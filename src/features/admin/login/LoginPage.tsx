@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import { Box, Typography, TextField, Stack } from '@mui/material'
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 
@@ -15,6 +16,9 @@ interface LoginFormData {
   password: string
 }
 
+const ADMIN_EMAIL = 'ravixoxo9@gmail.com'
+const ADMIN_PASSWORD = 'Xoxo@2018'
+
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
@@ -28,9 +32,13 @@ export default function LoginPage() {
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>()
 
-  const onSubmit = () => {
-    // TODO: integrate with authentication API
-    navigate('/admin/dashboard')
+  const onSubmit = (data: LoginFormData) => {
+    if (data.email === ADMIN_EMAIL && data.password === ADMIN_PASSWORD) {
+      navigate('/admin/dashboard')
+      return
+    }
+
+    toast.error('Invalid email or password. Please try again.')
   }
 
   return (

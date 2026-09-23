@@ -127,26 +127,46 @@ export default function PublicLayout() {
           backgroundColor: '#0B1220',
           color: '#CBD5E1',
           py: 1,
-          px: 4,
+          px: { xs: 2, sm: 4 },
         }}
       >
-        <Container maxWidth={false} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-            <Typography variant='body2' sx={{ fontWeight: 700 }}>
+        <Container
+          maxWidth={false}
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: { xs: 1, sm: 2 },
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              gap: { xs: 1.5, sm: 3 },
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              minWidth: 0,
+            }}
+          >
+            <Typography variant='body2' sx={{ fontWeight: 700, fontSize: { xs: '0.7rem', sm: '0.875rem' } }}>
               Email: {companyDetails?.email || 'info@xoenterprise.in'}
             </Typography>
             {companyDetails?.phone && (
-              <Typography variant='body2' sx={{ fontWeight: 700 }}>
+              <Typography variant='body2' sx={{ fontWeight: 700, fontSize: { xs: '0.7rem', sm: '0.875rem' } }}>
                 Phone: {companyDetails.phone}
               </Typography>
             )}
           </Box>
 
-          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
-            <Typography variant='body2' sx={{ fontWeight: 700 }}>
-            Follow Us:
-          </Typography>
-{SOCIALS.map((s) => (
+          <Box sx={{ display: 'flex', gap: { xs: 1, sm: 1.5 }, alignItems: 'center', flexWrap: 'wrap' }}>
+            <Typography
+              variant='body2'
+              sx={{ fontWeight: 700, display: { xs: 'none', sm: 'block' } }}
+            >
+              Follow Us:
+            </Typography>
+            {SOCIALS.map((s) => (
               <Box
                 key={s.label}
                 component='a'
@@ -217,6 +237,24 @@ export default function PublicLayout() {
                 onClick={() => navigate('/contact')}
               >
                 Request Quote
+              </Button>
+
+              <Button
+                variant='text'
+                sx={{
+                  borderRadius: 1,
+                  px: 3,
+                  py: 1.25,
+                  backgroundColor: 'transparent',
+                  color: 'secondary.main',
+                  fontWeight: 700,
+                  border: '1px solid #E53935',
+                  '&:hover': { backgroundColor: 'transparent', color: 'primary.main' },
+                  display: { xs: 'none', sm: 'inline-flex' },
+                }}
+                onClick={() => navigate('/admin/login')}
+              >
+                Admin
               </Button>
 
               <IconButton
@@ -298,6 +336,26 @@ export default function PublicLayout() {
             }}
           >
             Request Quote
+          </Button>
+          <Button
+            variant='text'
+            fullWidth
+            sx={{
+              borderRadius: 1,
+              px: 3,
+              py: 1.25,
+              backgroundColor: 'transparent',
+              color: 'secondary.main',
+              fontWeight: 700,
+              border: '1px solid #E53935',
+              '&:hover': { backgroundColor: 'transparent', color: 'primary.main' },
+            }}
+            onClick={() => {
+              setMobileOpen(false)
+              navigate('/admin/login')
+            }}
+          >
+            Admin
           </Button>
         </Box>
       </Drawer>

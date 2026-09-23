@@ -2,7 +2,7 @@ import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import { useTheme } from '@mui/material/styles'
 import { useQuery } from '@tanstack/react-query'
-import aboutUsImg from '@/assets/AboutUs.png'
+import aboutUsImg from '@/assets/About.jpeg'
 
 import { apiClient } from '@/services/api/client'
 import { type CompanyDetailsResponse } from '@/types/companyDetails'
@@ -42,7 +42,7 @@ export default function About() {
             sx={{
               width: '100%',
               height: 'auto',
-              maxHeight: 420,
+              maxHeight: 500,
               objectFit: 'cover',
               borderRadius: 3,
               boxShadow: '0 4px 20px rgba(15, 23, 42, 0.12)',

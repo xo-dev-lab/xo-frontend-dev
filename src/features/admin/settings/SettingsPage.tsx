@@ -15,6 +15,7 @@ import DeleteIcon from '@mui/icons-material/Delete'
 
 import { apiClient } from '@/services/api/client'
 import { type CompanyDetails, type CompanyDetailsResponse } from '@/types/companyDetails'
+import { toast } from 'react-toastify'
 
 /* ------------------------------------------------------------------ */
 /*  Tab panel helper                                                    */
@@ -114,19 +115,31 @@ export default function SettingsPage() {
   /* ---- Save company details ---- */
   const { mutate: saveCompanyDetails, isPending: isSaving } = useMutation({
     mutationFn: async (payload: CompanyDetails) => {
-      await apiClient.put('/api/company-details', payload)
+      const res = await apiClient.put<{ message?: string }>('/api/company-details', payload)
+      return res.data.message
     },
-    onSuccess: () => {
+    onSuccess: (message) => {
+      toast.success(message || 'Company details saved successfully.')
       refetch()
+    },
+    onError: (err: unknown) => {
+      const axiosError = err as { response?: { data?: { message?: string } } }
+      toast.error(axiosError.response?.data?.message || 'Failed to save company details.')
     },
   })
 
   const { mutate: saveCategories, isPending: isSavingCategories } = useMutation({
     mutationFn: async (payload: CompanyDetails) => {
-      await apiClient.put('/api/company-details', payload)
+      const res = await apiClient.put<{ message?: string }>('/api/company-details', payload)
+      return res.data.message
     },
-    onSuccess: () => {
+    onSuccess: (message) => {
+      toast.success(message || 'Categories saved successfully.')
       refetch()
+    },
+    onError: (err: unknown) => {
+      const axiosError = err as { response?: { data?: { message?: string } } }
+      toast.error(axiosError.response?.data?.message || 'Failed to save categories.')
     },
   })
 
