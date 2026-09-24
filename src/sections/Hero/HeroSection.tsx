@@ -5,16 +5,22 @@ import Typography from '@mui/material/Typography'
 import { useNavigate } from 'react-router-dom'
 
 import heroSectionImg from '@/assets/herosection (2).png'
+import boschImg from '@/assets/bosch.png'
+import cpPlusImg from '@/assets/cp plus.jfif'
+import dahuaImg from '@/assets/dahua.png'
+import hikvisionImg from '@/assets/hikvision.jfif'
+import honeywellImg from '@/assets/honeywell.png'
+import supremaImg from '@/assets/suprema.png'
 import Divider from '@mui/material/Divider'
 import Stack from '@mui/material/Stack'
 
 const brands = [
-  { name: "Hikvision", src: "https://placehold.co/200x80/0F172A/E53935?text=Hikvision" },
-  { name: "Dahua", src: "https://placehold.co/200x80/0F172A/E53935?text=Dahua" },
-  { name: "Bosch", src: "https://placehold.co/200x80/0F172A/E53935?text=Bosch" },
-  { name: "Honeywell", src: "https://placehold.co/200x80/0F172A/E53935?text=Honeywell" },
-  { name: "CP Plus", src: "https://placehold.co/200x80/0F172A/E53935?text=CP+Plus" },
-  { name: "Suprema", src: "https://placehold.co/200x80/0F172A/E53935?text=Suprema" },
+  { name: "Hikvision", src: hikvisionImg },
+  { name: "Dahua", src: dahuaImg },
+  { name: "Bosch", src: boschImg },
+  { name: "Honeywell", src: honeywellImg },
+  { name: "CP Plus", src: cpPlusImg },
+  { name: "Suprema", src: supremaImg },
 ];
 
 export default function HeroSection() {
