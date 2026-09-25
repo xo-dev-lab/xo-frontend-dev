@@ -23,7 +23,7 @@ import ProductImage, {
 } from '@/components/common/ui/ProductImage/ProductImage'
 import InquiryDialog from './InquiryDialog'
 
-const formatPrice = (price: string) => `$${Number(price).toLocaleString()}`
+// const formatPrice = (price: string) => `$${Number(price).toLocaleString()}`
 
 export default function ProductDetailsPage() {
   const { id } = useParams<{ id: string }>()
@@ -250,14 +250,14 @@ export default function ProductDetailsPage() {
             </Box>
 
             {/* Price */}
-            <Typography
+            {/* <Typography
               variant='h4'
               fontWeight={800}
               color='error'
               sx={{ mb: 2.5 }}
             >
               {formatPrice(product.price)}
-            </Typography>
+            </Typography> */}
 
             {/* Description */}
             <Typography

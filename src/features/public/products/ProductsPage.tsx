@@ -21,7 +21,7 @@ import Loader from '@/components/common/ui/Loader/Loader'
 import EmptyState from '@/components/common/ui/EmptyState/EmptyState'
 import ProductImage from '@/components/common/ui/ProductImage/ProductImage'
 
-const formatPrice = (price: string) => `$${Number(price).toLocaleString()}`
+// const formatPrice = (price: string) => `$${Number(price).toLocaleString()}`
 
 export default function ProductsPage() {
   const navigate = useNavigate()
@@ -204,9 +204,9 @@ export default function ProductsPage() {
                   >
                     {product.description}
                   </Typography>
-                  <Typography variant='h6' fontWeight={700} sx={{ mb: 1.5 }}>
+                  {/* <Typography variant='h6' fontWeight={700} sx={{ mb: 1.5 }}>
                     {formatPrice(product.price)}
-                  </Typography>
+                  </Typography> */}
                   <Box sx={{ textAlign: 'center' }}>
                     <Button
                       variant='outlined'

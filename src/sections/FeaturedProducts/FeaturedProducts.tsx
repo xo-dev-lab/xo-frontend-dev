@@ -14,7 +14,7 @@ import { type ProductListResponse } from '@/types/product'
 
 const MAX_PRODUCTS = 10
 
-const formatPrice = (price: string) => `$${Number(price).toLocaleString()}`
+// const formatPrice = (price: string) => `$${Number(price).toLocaleString()}`
 
 export default function FeaturedProducts() {
   const navigate = useNavigate()
@@ -84,9 +84,9 @@ export default function FeaturedProducts() {
                 >
                   {product.description}
                 </Typography>
-                <Typography variant='h6' fontWeight={700} sx={{ mb: 1.5 }}>
+                {/* <Typography variant='h6' fontWeight={700} sx={{ mb: 1.5 }}>
                   {formatPrice(product.price)}
-                </Typography>
+                </Typography> */}
                 <Box sx={{ textAlign: 'center' }}>
                   <Button
                     variant='outlined'
